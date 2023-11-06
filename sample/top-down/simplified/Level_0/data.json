@@ -1,0 +1,69 @@
+{
+	"identifier": "Level_0",
+	"uniqueIdentifer": "db4d09b0-6280-11ee-bc44-1b84534fe012",
+	"x": 0,
+	"y": 0,
+	"width": 256,
+	"height": 256,
+	"bgColor": "#696A79",
+	"neighbourLevels": [],
+	"customFields" : {},
+	"layers": [
+		"Background.png",
+		"Foreground.png"
+	],
+	"entities": {
+		"Potion": [
+			{
+				"id": "Potion",
+				"iid": "5efeae70-6280-11ee-bc44-77d1860dfd25",
+				"layer": "Objects",
+				"x": 208,
+				"y": 128,
+				"width": 16,
+				"height": 16,
+				"color": 14120515,
+				"customFields" : {}
+			}
+		],
+		"Spell_Book": [
+			{
+				"id": "Spell_Book",
+				"iid": "61f977e0-6280-11ee-bc44-a1335ec20886",
+				"layer": "Objects",
+				"x": 192,
+				"y": 176,
+				"width": 16,
+				"height": 16,
+				"color": 15389866,
+				"customFields" : {}
+			}
+		],
+		"PlayerStart": [
+			{
+				"id": "PlayerStart",
+				"iid": "638cc210-6280-11ee-bc44-cb342b86cd82",
+				"layer": "Objects",
+				"x": 64,
+				"y": 144,
+				"width": 16,
+				"height": 16,
+				"color": 12463919,
+				"customFields" : {}
+			}
+		],
+		"Sword": [
+			{
+				"id": "Sword",
+				"iid": "9e10ab90-6280-11ee-bc44-a5424234ea8a",
+				"layer": "Objects",
+				"x": 176,
+				"y": 128,
+				"width": 16,
+				"height": 16,
+				"color": 14984818,
+				"customFields" : {}
+			}
+		]
+	}
+}

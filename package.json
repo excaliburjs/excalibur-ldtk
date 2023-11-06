@@ -1,0 +1,25 @@
+{
+  "name": "excalibur-ldtk",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "webpack-dev-server --config webpack.config.test.js --open",
+    "watch": "webpack --progress --watch",
+    "build": "webpack --mode production",
+    "test:unit": "karma start",
+    "test:integration": "webpack --config webpack.config.test.js && ex-test -d ./example -t ./test/integration/test.js",
+    "test": "npm run test:unit && npm run test:integration"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "excalibur": "0.28.1",
+    "raw-loader": "4.0.2",
+    "ts-loader": "9.5.0",
+    "typescript": "5.2.2",
+    "webpack": "5.89.0",
+    "webpack-cli": "5.1.4",
+    "webpack-dev-server": "4.15.1"
+  }
+}
