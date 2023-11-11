@@ -62,7 +62,9 @@
 				"width": 16,
 				"height": 16,
 				"color": 14984818,
-				"customFields" : {}
+				"customFields": {
+					"attack": 50
+				}
 			}
 		]
 	}
