@@ -1,5 +1,6 @@
 import { LdtkResource } from '@excalibur-ldtk';
 import * as ex from "excalibur";
+import { Player } from './player';
 
 const game = new ex.Engine({
     resolution: {
@@ -16,17 +17,12 @@ const ldtkResource = new LdtkResource('./top-down.ldtk');
 
 const loader = new ex.Loader([ldtkResource]);
 
-const player = new ex.Actor({
-    color: ex.Color.Red,
-    width: 16,
-    height: 16,
-    pos: ex.vec(100, 100)
-});
-
-game.add(player);
-
-
 game.start(loader).then(() => {
     console.log('Game start!');
+
+    ldtkResource.registerEntityType('PlayerStart', Player);
+    // Provide a type to the plugin to use for a specific entity identifier
+    // Player.ts
     ldtkResource.parse(game.currentScene);
+
 });
