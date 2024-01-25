@@ -1,164 +1,22 @@
 import { TileLayer } from './tile-layer';
 import { PathMap, pathRelativeToBase } from './path-util';
 import { FetchLoader, FileLoader } from './file-loader';
-import { LdtkProjectMetadata } from './types';
+import { LdtkEntityDefinition, LdtkEntityInstance, LdtkProjectMetadata } from './types';
 import { compare } from 'compare-versions';
 import { LoaderCache } from './loader-cache';
 import { Entity, ImageSource, Loadable, Scene, Vector } from 'excalibur';
 import { LevelResource } from './level-resource';
 import { Tileset } from './tileset';
 import { Level } from './level';
+import { EntityLayer } from './entity-layer';
+import { IntGridLayer } from './intgrid-layer';
 
-export interface TiledAddToSceneOptions {
+export interface AddToSceneOptions {
     pos: Vector;
-}
-
-export interface LdtkTilesetMetadata {
-    __cWid: number;
-    __cHei: number;
-    identifier: string;
-    uid: number;
-    relPath: string;
-    pxWid: number,
-    pxHei: number,
-    tileGridSize: number,
-    spacing: number,
-    padding: number,
-    tags: string[],
-}
-
-export interface IntGridValue {
-    value: number;
-    identifier: string;
-    color: string; //"#000000"
-    tile: LdtkTileRect;
-    groupUid: number;
-}
-export interface LdtkLayerMetadata {
-    __type: "Tiles" | "Entities" | "IntGrid" | "AutoLayer";
-    identifier: string;
-    uid: number;
-    intGridValues: IntGridValue[];
-}
-
-export interface LdtkTileRect {
-    tilesetUid: number;
-    x: number;
-    y: number;
-    w: number;
-    h: number;
-}
-
-export interface LdtkEntityMetadata {
-    identifier: string;
-    uid: number;
-    tags: string[];
-    width: number;
-    height: number;
-    tilesetId: number;
-    tileRenderMode: "FitInside";
-    tileRect: LdtkTileRect;
-    pivotX: number;
-    pivotY: number;
-}
-
-// export interface LdtkProjectMetadata {
-//     worldGridWidth: number,
-// 	worldGridHeight: number,
-// 	defaultLevelWidth: number,
-// 	defaultLevelHeight: number,
-//     defaultGridSize: number;
-// 	defaultEntityWidth: number;
-// 	defaultEntityHeight: number;
-//     defs: {
-//         layers: LdtkLayerMetadata[];
-//         entities: LdtkEntityMetadata[];
-//         tilesets: LdtkTilesetMetadata[];
-//     };
-//     levels: LdtkLevelMetadata[];
-
-// }
-
-export interface LdtkLevelMetadata {
-    identifier: string;
-    iid: string, // guid
-    uid: number,
-    worldX: number,
-    worldY: number,
-    worldDepth: number,
-    pxWid: number,
-    pxHei: number,
-    __bgColor: string, // hex color
-    externalRelPath: string, // "top-down/Level_0.ldtkl"
-}
-
-export interface LdtkLevel {
-    identifier: string;
-    iid: string; // guid
-    uid: number,
-    pxWid: number
-    pxHei: number
-    layerInstances: LdtkTileLayer[]
-}
-
-export interface LdtkTile {
-    // TODO account for the layer offsets
     /**
-     * Pixel coordinates fo the tile in the layer
+     * Optionally add only specific levels to the scene
      */
-    px: [number, number];
-    /**
-     * pixel coords of the tile in the tileset
-     */
-    src: [number, number],
-    /**
-     * Flip bit 0 = no flip, 1 = x flip, 2 = y flip, 3 = both flip
-     */
-    f: 0,
-    /**
-     * Tile Id in the tileset
-     */
-    t: 7,
-    /**
-     * Opacity
-     */
-    a: 1
-}
-
-export interface LdtkEntity {
-    __identifier: string;
-    __grid: [number, number];
-    __pivot: [number, number];
-    __tags: string[];
-    __tile: LdtkTileRect;
-    __worldX: number;
-    __worldY: number;
-    iid: string;// guid
-    width: number;
-    height: number;
-    defUid: number; // references the metadata
-    px: [number, number];
-}
-
-export interface LdtkTileLayer {
-    __identifier: string;
-    __type: string;
-    __cWid: number;
-    __cHei: number;
-    __gridSize: number;
-    __tilesetDefUid: number;
-    __tilesetRelPath: string; // "Solaria Demo Pack Update 03/Solaria Demo Pack Update 03/16x16/Tilesets/Solaria Demo Update 01.png",
-    iid: string; // "6e47de30-6280-11ee-bc44-b5fa9e2b5fb3",
-    levelId: number;
-    layerDefUid: number;
-    gridTiles: LdtkTile[];
-    entityInstances: LdtkEntity[];
-    intGridCsv: number[];
-}
-
-export interface LdtkTileset {
-    metadata: LdtkTilesetMetadata;
-    spriteSheet: SpriteSheet;
+    levelFilter?: string[];
 }
 
 export interface FactoryProps {
@@ -177,15 +35,15 @@ export interface FactoryProps {
     /**
      * LDtk entity
      */
-    entity: LdtkEntity;
+    entity: LdtkEntityInstance;
     /**
      * LDtk entity metadata
      */
-    metadata: LdtkEntityMetadata | undefined;
+    definition: LdtkEntityDefinition | undefined;
     /**
      * Layer
      */
-    layer: TileLayer;
+    layer: EntityLayer;
     /**
      * LDtk properties, these are all converted to lowercase keys, and lowercase if the value is a string
      */
@@ -264,7 +122,7 @@ export interface LdtkResourceOptions {
      *
      * Defaults true, if false the camera will use the layer bounds to keep the camera from showing the background.
      */
-    useTilemapCameraStrategy?: boolean;
+    useTilemapCameraStrategy?: boolean; // TODO implement
 
     /**
      * Configure custom Actor/Entity factory functions to construct Actors/Entities
@@ -359,11 +217,10 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
 
         // iterate through the levels
         // load the level metadata
-        const levelsToLoad: Promise<LdtkLevel>[] = [];
         for (let level of this.projectMetadata.levels) {
             if (level.externalRelPath) {
                 const levelPath = pathRelativeToBase(this.path, level.externalRelPath, this.pathMap);
-                this._levelLoader.getOrAdd(levelPath, {
+                this._levelLoader.getOrAdd(levelPath, this, {
                     headless: this.headless,
                     strict: this.strict,
                     fileLoader: this.fileLoader,
@@ -382,12 +239,11 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
             this.levels.set(level.data.ldtkLevel.uid, level.data);
         });
 
-        // TODO build up layers
+        // TODO build up layers that aren't external
 
         return this.data = this.projectMetadata;
     };
 
-    
     isLoaded(): boolean {
         return !!this.data;
     }
@@ -396,145 +252,18 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
         this.factories.set(ldtkEntityIdentifier, factory);
     }
 
-    addToScene(scene: Scene) {
-
-        // Parse all the data and produce excalibur objects
-        const tileMaps: TileMap[] = [];
+    addToScene(scene: Scene, options?: AddToSceneOptions) {
+        // TODO options
         for (let [id, level] of this.levels.entries()) {
-            const totalLayers = level.layerInstances.length;
-            let currentLayer = 0;
-            for (let layer of level.layerInstances) {
-                currentLayer++;
-                if (layer.entityInstances?.length !== 0) {
-                    for (let entity of layer.entityInstances) {
-                        // TODO come up with tags that make sense to communicate to excalibur
-                        // TODO metadata pivotX/Y
-                        // TODO tileRenderMode
-                        const entityMetadata = this.data.defs.entities.find(e => {
-                            return e.identifier === entity.__identifier
-                        });
-                        let actor: Actor;
-
-                        if (this.factories.has(entity.__identifier)) {
-                            const factory = this.factories.get(entity.__identifier);
-                            if (factory) {
-                                const newEntity = factory({
-                                    type: entity.__identifier,
-                                    worldPos: vec(entity.px[0], entity.px[1]),
-                                    entity,
-                                    metadata: entityMetadata, //anchor: vec(entityMetadata?.pivotX ?? 0, entityMetadata?.pivotY ?? 0),
-                                    layer,
-                                    properties: new Map<string, any>()// TODO LDtk props
-                                });
-                                if (newEntity) {
-                                    scene.add(newEntity);
-                                }
-                            }
-                        } else {
-                            actor = new Actor({
-                                name: entity.__identifier,
-                                pos: vec(entity.px[0], entity.px[1]),
-                                width: entity.width,
-                                height: entity.height,
-                                anchor: vec(entityMetadata?.pivotX ?? 0, entityMetadata?.pivotY ?? 0),
-                                z: totalLayers - currentLayer
-                            });
-                            const ts = this.tilesets.get(entity.__tile.tilesetUid);
-                            if (ts) {
-                                const tsxCoord = Math.floor(entity.__tile.x / entity.__tile.w);
-                                const tsyCoord = Math.floor(entity.__tile.y / entity.__tile.h);
-                                const sprite = ts.spriteSheet.getSprite(tsxCoord, tsyCoord);
-                                if (sprite) {
-                                    actor.graphics.use(sprite);
-                                }
-                            }
-                            scene.add(actor);
-
-                        }
-
-                    }
-                    continue;
-                }
-
-                if (layer.gridTiles?.length !== 0) {
-                    // TODO fix the grid size
-                    const tilemap = new TileMap({
-                        name: layer.__identifier,
-                        tileWidth: this.data.defaultGridSize,
-                        tileHeight: this.data.defaultGridSize,
-                        rows: this.data.worldGridHeight / this.data.defaultGridSize,
-                        columns: this.data.worldGridWidth / this.data.defaultGridSize,
-                    });
-                    tilemap.z = totalLayers - currentLayer;
-
-                    for (let tile of layer.gridTiles) {
-                        const xCoord = Math.floor(tile.px[0] / this.data.defaultGridSize);
-                        const yCoord = Math.floor(tile.px[1] / this.data.defaultGridSize);
-                        const exTile = tilemap.getTile(xCoord, yCoord);
-                        const ts = this.tilesets.get(layer.__tilesetDefUid);
-                        const tsxCoord = Math.floor(tile.src[0] / this.data.defaultGridSize);
-                        const tsyCoord = Math.floor(tile.src[1] / this.data.defaultGridSize);
-                        if (ts) {
-                            const sprite = ts.spriteSheet.getSprite(tsxCoord, tsyCoord);
-                            if (sprite) {
-                                exTile.addGraphic(sprite);
-                            } else {
-                                console.log('Could not find sprite in LDtk spritesheet at', tsxCoord, tsyCoord);
-                            }
-                        } else {
-                            console.log('Could not tileset in LDtk', layer.__tilesetDefUid, layer.__tilesetRelPath);
-                        }
-                    }
-                    tileMaps.push(tilemap);
-                }
-
-                if (layer.intGridCsv?.length !== 0) {
-                    const rows = layer.__cHei;
-                    const columns = layer.__cWid;
-                    const tilemap = new TileMap({
-                        name: layer.__identifier,
-                        tileWidth: layer.__gridSize,
-                        tileHeight: layer.__gridSize,
-                        rows,
-                        columns,
-                    });
-                    // TODO define what integers mean solid
-
-                    // find the intgrid metadata
-
-                    const layerMetadata = this.data.defs.layers.find(l => {
-                        return layer.__identifier === l.identifier;
-                    });
-
-                    if (layerMetadata) {
-                        const solidValue = layerMetadata.intGridValues.find(val => {
-                            return val?.identifier?.toLocaleLowerCase() === 'solid';
-                        });
-
-                        for (let i = 0; i < layer.intGridCsv.length; i++) {
-                            const xCoord = i % columns;
-                            const yCoord = Math.floor(i / columns);
-                            const tile = tilemap.getTile(xCoord, yCoord);
-                            if (solidValue && layer.intGridCsv[i] === solidValue.value) {
-                                tile.solid = true;
-                            }
-
-                            // TODO might be a mistake to treat 1 as solid if there isn't a labelled solid
-                            if (!solidValue && layer.intGridCsv[i] === 1) {
-                                tile.solid = true;
-                            }
-                        }
-
-                        tileMaps.push(tilemap);
+            for (let layer of level.layers) {
+                if (layer instanceof TileLayer || layer instanceof IntGridLayer) {
+                    scene.add(layer.tilemap)
+                } else {
+                    for (let entity of layer.entities) {
+                        scene.add(entity);
                     }
                 }
-
-
             }
         }
-
-        tileMaps.forEach(tm => {
-            scene.add(tm);
-        });
     }
 }

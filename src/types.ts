@@ -12,7 +12,7 @@ const LdtkTilesetRectangle = z.object({
 const LdtkPixel = z.tuple([z.number(), z.number()]);
 const LdtkFieldInstance = z.object({
     __identifier: z.string(),
-    __tile: z.optional(LdtkTilesetRectangle),
+    __tile: LdtkTilesetRectangle.nullable(),
     __type: z.string(),//z.union([z.literal('Int'), z.literal('Float'), z.literal('String'), z.literal('Bool'), z.literal('Enum')]), // TODO this might not work with ENUM
     __value: z.any(),
     defUid: z.number()
@@ -25,22 +25,23 @@ const LdtkTileInstance = z.object({
     t: z.number()
 });
 
-const LdtkEntityInstance = z.object({
+export const LdtkEntityInstance = z.object({
     __grid: LdtkPixel,
     __identifier: z.string(),
     __pivot: LdtkPixel,
     __smartColor: z.string(),
     __tags: z.array(z.string()),
     __tile: LdtkTilesetRectangle,
-    __worldX: z.optional(z.number()),
-    __worldY: z.optional(z.number()),
+    __worldX: z.number().nullable(),
+    __worldY: z.number().nullable(),
     defUid: z.number(),
     fieldInstances: z.array(LdtkFieldInstance),
     height: z.number(),
     iid: z.string(),
     px: LdtkPixel,
     width: z.number()
-})
+});
+export type LdtkEntityInstance = z.infer<typeof LdtkEntityInstance>;
 
 export const LdtkLayerInstance = z.object({
     __cHei: z.number(),
@@ -50,8 +51,8 @@ export const LdtkLayerInstance = z.object({
     __opacity: z.number(),
     __pxTotalOffsetX: z.number(),
     __pxTotalOffsetY: z.number(),
-    __tilesetDefUid: z.optional(z.number()),
-    __tilesetRelPath: z.optional(z.string()),
+    __tilesetDefUid: z.number().nullable(),
+    __tilesetRelPath:z.string().nullable(),
     __type: z.union([z.literal('IntGrid'), z.literal('Entities'), z.literal('Tiles'), z.literal('AutoLayer')]),
     autoLayerTiles: z.array(LdtkTileInstance), // only in auto layers
     entityInstances: z.array(LdtkEntityInstance),// only in entity layers
@@ -60,7 +61,7 @@ export const LdtkLayerInstance = z.object({
     intGridCsv: z.array(z.number()), // __cWid x __cHei, 0 means empty, values start at 1
     layerDefUid: z.number(),
     levelId: z.number(),
-    overrideTilesetUid: z.optional(z.number()),
+    overrideTilesetUid: z.number().nullable(),
     pxOffsetX: z.number(),
     pxOffsetY: z.number(),
     visible: z.boolean()
@@ -68,23 +69,23 @@ export const LdtkLayerInstance = z.object({
 export type LdtkLayerInstance = z.infer<typeof LdtkLayerInstance>;
 
 export const LdtkLevel = z.object({
-    __bgColor: z.string(),
-    bgColor: z.string(),
-    __bgPos: z.optional(z.object({
+    __bgColor: z.string().nullable(),
+    bgColor: z.string().nullable(),
+    __bgPos: z.object({
         cropRect: z.array(z.tuple([z.number(), z.number(), z.number(), z.number()])), // cropX, cropY, cropWidth, cropHeight
         scale: z.tuple([z.number(), z.number()]),
         topLeftPx: LdtkPixel
-    })),
+    }).nullable(),
     __neighbours: z.array(z.object({
         dir: z.union([z.literal('n'), z.literal('s'), z.literal('w'), z.literal('e'), z.literal('ne'), z.literal('nw'), z.literal('se'), z.literal('sw'), z.literal('o'), z.literal('<'), z.literal('>')]),
         levelIid: z.string()
     })),
-    bgRelPath: z.optional(z.string()),
-    externalRelPath: z.optional(z.string()),
+    bgRelPath: z.string().nullable(),
+    externalRelPath: z.string().nullable(),
     fieldInstances: z.array(LdtkFieldInstance),
     identifier: z.string(),
     iid: z.string(),
-    layerInstances: z.optional(z.array(LdtkLayerInstance)), // null if the save levels separately is enabled
+    layerInstances: z.array(LdtkLayerInstance).nullable(), // null if the save levels separately is enabled
     pxHei: z.number(),
     pxWid: z.number(),
     uid: z.number(),
@@ -108,12 +109,12 @@ export type LdtkWorld = z.infer<typeof LdtkWorld>;
 const LdtkEnumValueDefinition = z.object({
     color: z.number(),
     id: z.string(),
-    tileRect: z.optional(LdtkTilesetRectangle)
+    tileRect: LdtkTilesetRectangle.nullable()
 });
 
 const LdtkEnumDefinition = z.object({
-    externalRelPath: z.optional(z.string()),
-    iconTilesetUid: z.optional(z.number()),
+    externalRelPath: z.string().nullable(),
+    iconTilesetUid: z.number().nullable(),
     identifier: z.string(),
     tags: z.array(z.string()),
     uid: z.number(),
@@ -129,19 +130,19 @@ const LdtkTilesetDefinition = z.object({
         data: z.string(),
         tileId: z.number()
     })),
-    embedAtlas: z.optional(z.literal('LdtkIcons')),
-    enumsTags: z.array(z.object({
+    embedAtlas: z.string().nullable(),
+    enumsTags: z.optional(z.array(z.object({
         enumValueId: z.string(),
         tileIds: z.array(z.number())
-    })),
+    }))),
     identifier: z.string(),
     padding: z.number(),
     pxHei: z.number(),
     pxWid: z.number(),
-    relPath: z.optional(z.string()),
+    relPath: z.string().nullable(),
     spacing: z.number(),
     tags: z.array(z.string()),
-    tagsSourceEnumUid: z.optional(z.number()),
+    tagsSourceEnumUid: z.number().nullable(),
     tileGridSize: z.number(),
     uid: z.number()
 })
@@ -149,20 +150,20 @@ export type LdtkTilesetDefinition = z.infer<typeof LdtkTilesetDefinition>;
 
 export const LdtkLayerDefinition = z.object({
     __type: z.union([z.literal("IntGrid"), z.literal("Entities"), z.literal("Tiles"), z.literal("AutoLayer")]),
-    autoSourceLayerDefUid: z.optional(z.number()),
+    autoSourceLayerDefUid: z.number().nullable(),
     displayOpacity: z.number(),
     gridSize: z.number(),
     identifier: z.string(),
     intGridValues: z.array(z.object({
         color: z.string(),
         groupUid: z.number(),
-        identifier: z.optional(z.string()),
-        tile: z.optional(LdtkTilesetRectangle),
+        identifier: z.string().nullable(),
+        tile: LdtkTilesetRectangle.nullable(),
         value: z.number()
     })),
     intGridValuesGroups: z.array(z.object({
-        color: z.optional(z.string()),
-        identifier: z.optional(z.string()),
+        color: z.string().nullable(),
+        identifier: z.string().nullable(),
         uid: z.number()
     })),
     parallaxFactorX: z.number(),
@@ -170,7 +171,7 @@ export const LdtkLayerDefinition = z.object({
     parallaxScaling: z.boolean(),
     pxOffsetX: z.number(),
     pxOffsetY: z.number(),
-    tilesetDefUid: z.optional(z.number()),
+    tilesetDefUid: z.number().nullable(),
     uid: z.number(),
 });
 export type LdtkLayerDefinition = z.infer<typeof LdtkLayerDefinition>;
@@ -192,8 +193,8 @@ export const LdtkEntityDefinition = z.object({
         z.literal("FullSizeUncropped"),
         z.literal("NineSlice")
     ]),
-    tilesetId: z.optional(z.number()),
-    uiTileRect: z.optional(LdtkTilesetRectangle),
+    tilesetId: z.number().nullable(),
+    uiTileRect: LdtkTilesetRectangle.nullable(),
     uid: z.number(),
     width: z.number()
 });
@@ -209,7 +210,7 @@ export type LdtkDefinitions = z.infer<typeof LdtkDefinitions>;
 
 export const LdtkProjectMetadata = z.object({
     iid: z.string(),
-    bgColor: z.string(),
+    bgColor: z.string().nullable(),
     defs: LdtkDefinitions,
     externalLevels: z.boolean(),
     jsonVersion: z.string(),
@@ -226,10 +227,10 @@ export const LdtkProjectMetadata = z.object({
         }))
     })),
     // Moving to worlds array
-    worldGridHeight: z.optional(z.number()),
-    worldGridWidth: z.optional(z.number()),
+    worldGridHeight: z.number().nullable(),
+    worldGridWidth: z.number().nullable(),
     // TODO is this a LDtk docs typo Vania?
-    worldLayout: z.optional(z.union([z.literal('Free'), z.literal('GridVania'), z.literal('LinearHorizontal'), z.literal('LinearVertical')])),
+    worldLayout: z.union([z.literal('Free'), z.literal('GridVania'), z.literal('LinearHorizontal'), z.literal('LinearVertical')]).nullable(),
     worlds: z.array(LdtkWorld)
 });
 export type LdtkProjectMetadata = z.infer<typeof LdtkProjectMetadata>;

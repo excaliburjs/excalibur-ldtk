@@ -28,17 +28,11 @@ game.start(loader).then(() => {
             width: props.entity.width,
             height: props.entity.height,
             pos: props.worldPos,
-            collisionType
+            z: props.layer.order
         });
-        player.z = 100;
         return player;
     });
     // Provide a type to the plugin to use for a specific entity identifier
     // Player.ts
     ldtkResource.addToScene(game.currentScene);
-
-
-
-
-
 });

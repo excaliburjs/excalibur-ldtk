@@ -4,6 +4,7 @@ import { LoaderCache } from "./loader-cache";
 import { FetchLoader, FileLoader } from "./file-loader";
 import { Level } from "./level";
 import { LdtkLevel } from "./types";
+import { LdtkResource } from "./ldtk-resource";
 
 export interface LevelResourceOptions {
     headless?: boolean;
@@ -22,7 +23,7 @@ export class LevelResource implements Loadable<Level> {
     private pathMap?: PathMap;
     public readonly strict: boolean = true;
     public readonly headless: boolean = false;
-    constructor(public readonly path: string, options?: LevelResourceOptions) {
+    constructor(public readonly path: string, public readonly resource: LdtkResource, options?: LevelResourceOptions) {
         const { headless, strict, fileLoader, imageLoader, pathMap } = { ...options };
         this.fileLoader = fileLoader ?? this.fileLoader;
         this.strict = strict ?? this.strict;
@@ -44,7 +45,7 @@ export class LevelResource implements Loadable<Level> {
         } else {
             level = data as LdtkLevel;
         }
-        return this.data = new Level(level);
+        return this.data = new Level(level, this.resource);
     }
     isLoaded(): boolean {
         return !!this.data;

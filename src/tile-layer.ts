@@ -12,8 +12,8 @@ export class TileLayer {
             name: ldtkLayer.__identifier,
             tileWidth: ldtkLayer.__gridSize,
             tileHeight: ldtkLayer.__gridSize,
-            rows: ldtkLayer.__cHei / ldtkLayer.__gridSize,
-            columns: ldtkLayer.__cWid / ldtkLayer.__gridSize,
+            rows: ldtkLayer.__cHei,
+            columns: ldtkLayer.__cWid,
         });
         this.tilemap.z = order;
 
