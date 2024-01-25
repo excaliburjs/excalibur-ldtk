@@ -1,6 +1,17 @@
-import * as ex from 'excalibur';
+import { TileLayer } from './tile-layer';
+import { PathMap, pathRelativeToBase } from './path-util';
+import { FetchLoader, FileLoader } from './file-loader';
+import { LdtkProjectMetadata } from './types';
+import { compare } from 'compare-versions';
+import { LoaderCache } from './loader-cache';
+import { Entity, ImageSource, Loadable, Scene, Vector } from 'excalibur';
+import { LevelResource } from './level-resource';
+import { Tileset } from './tileset';
+import { Level } from './level';
 
-// TODO json representation of Resource<T>
+export interface TiledAddToSceneOptions {
+    pos: Vector;
+}
 
 export interface LdtkTilesetMetadata {
     __cWid: number;
@@ -21,7 +32,7 @@ export interface IntGridValue {
     identifier: string;
     color: string; //"#000000"
     tile: LdtkTileRect;
-    groupUid: number; 
+    groupUid: number;
 }
 export interface LdtkLayerMetadata {
     __type: "Tiles" | "Entities" | "IntGrid" | "AutoLayer";
@@ -51,22 +62,22 @@ export interface LdtkEntityMetadata {
     pivotY: number;
 }
 
-export interface LdtkProjectMetadata {
-    worldGridWidth: number,
-	worldGridHeight: number,
-	defaultLevelWidth: number,
-	defaultLevelHeight: number,
-    defaultGridSize: number;
-	defaultEntityWidth: number;
-	defaultEntityHeight: number;
-    defs: {
-        layers: LdtkLayerMetadata[];
-        entities: LdtkEntityMetadata[];
-        tilesets: LdtkTilesetMetadata[];
-    };
-    levels: LdtkLevelMetadata[];
+// export interface LdtkProjectMetadata {
+//     worldGridWidth: number,
+// 	worldGridHeight: number,
+// 	defaultLevelWidth: number,
+// 	defaultLevelHeight: number,
+//     defaultGridSize: number;
+// 	defaultEntityWidth: number;
+// 	defaultEntityHeight: number;
+//     defs: {
+//         layers: LdtkLayerMetadata[];
+//         entities: LdtkEntityMetadata[];
+//         tilesets: LdtkTilesetMetadata[];
+//     };
+//     levels: LdtkLevelMetadata[];
 
-}
+// }
 
 export interface LdtkLevelMetadata {
     identifier: string;
@@ -147,93 +158,248 @@ export interface LdtkTileLayer {
 
 export interface LdtkTileset {
     metadata: LdtkTilesetMetadata;
-    spriteSheet: ex.SpriteSheet;
+    spriteSheet: SpriteSheet;
 }
 
-type ExtendsActorConstructor<TEntity extends ex.Actor> = new (actorArgs: ex.ActorArgs) => TEntity;
+export interface FactoryProps {
+    /**
+     * Excalibur world position
+     */
+    worldPos: Vector;
+    /**
+     * LDtk name in UI
+     */
+    name?: string;
+    /**
+     * LDtk type in UI
+     */
+    type: string;
+    /**
+     * LDtk entity
+     */
+    entity: LdtkEntity;
+    /**
+     * LDtk entity metadata
+     */
+    metadata: LdtkEntityMetadata | undefined;
+    /**
+     * Layer
+     */
+    layer: TileLayer;
+    /**
+     * LDtk properties, these are all converted to lowercase keys, and lowercase if the value is a string
+     */
+    properties: Record<string, any>;
+}
 
-export class LdtkResource implements ex.Loadable<LdtkProjectMetadata> {
-    private _projectResource: ex.Resource<LdtkProjectMetadata>
-    public tilesets = new Map<number, LdtkTileset>();
-    public levels = new Map<number, LdtkLevel>();
-    public entityToConstructor = new Map<string, ExtendsActorConstructor<any>>();
+export interface LdtkResourceOptions {
+    /**
+    * Add a starting z index for the layers to use. By default the layers count up from 0.
+    *
+    * If you'd like to manually override a z-index on a layer use the 'zindex' custom property on a layer.
+    */
+    startZIndex?: number;
 
-    public convertPath = (originPath: string, relativePath: string) => {
-        // Use absolute path if specified
-        if (relativePath.indexOf('/') === 0) {
-            return relativePath;
+    /**
+     * Default true. If false, only tilemap will be parsed and displayed, it's up to you to wire up any excalibur behavior.
+     * Automatically wires excalibur to the following
+     * * Wire up current scene camera
+     * * Make Actors/Tiles with colliders on Tiled tiles & Tiled objects
+     * * Support solid layers
+     *
+     * Read more at excaliburjs.com!
+     */
+    useExcaliburWiring?: boolean;
+
+    /**
+     * Sets excalibur's background color to match the Tiled map
+     */
+    useMapBackgroundColor?: boolean;
+
+    /**
+     * The pathMap helps work around odd things bundlers do with static files by providing a way to redirect the original
+     * source paths in the Tiled files to new locations.
+     *
+     * When the LDtk resource comes across something that matches `path`, it will use the output string instead.
+     * 
+     * Example:
+     * ```typescript
+     * const newResource = new LdtkResource('./example-city.ldtk', {
+     *     pathMap: [
+     *        // If the "path" is included in the source path, the output will be used
+     *        { path: 'cone.png', output: '/static/assets/cone.png' },
+     *        // Regex matching with special [match] in output string that is replaced with the first match from the regex
+     *        { path: /(.*\..*$)/, output: '/static/assets/[match]'}
+     *     ]
+     *  }
+     * ```
+     */
+    pathMap?: PathMap;
+
+    /**
+     * Optionally provide a custom file loader implementation instead of using the built in ajax (fetch) loader
+     * that takes a path and returns file data
+     * 
+     */
+    fileLoader?: FileLoader;
+
+    /**
+     * By default `true`, means Tiled files must pass the plugins Typed parse pass.
+     *
+     * If you have something that the Tiled plugin does not expect, you can set this to false and it will do it's best
+     * to parse the Tiled source map file.
+     */
+    strict?: boolean;
+
+    /**
+    * Plugin will operate in headless mode and skip all graphics related
+    * excalibur items including creating ImageSource's for Tiled items.
+    *
+    * Default false.
+    */
+    headless?: boolean;
+
+    /**
+     * Keeps the camera viewport within the bounds of the TileMap, uses the first tile layer's bounds.
+     *
+     * Defaults true, if false the camera will use the layer bounds to keep the camera from showing the background.
+     */
+    useTilemapCameraStrategy?: boolean;
+
+    /**
+     * Configure custom Actor/Entity factory functions to construct Actors/Entities
+     * given a LDtk type name
+     */
+    entityIdentifierFactories?: Record<string, (props: FactoryProps) => Entity | undefined>;
+}
+
+export class LdtkResource implements Loadable<LdtkProjectMetadata> {
+    public static supportedLdtkVersion = "1.5.3";
+    public projectMetadata!: LdtkProjectMetadata;
+    data!: LdtkProjectMetadata;
+
+
+    public tilesets = new Map<number, Tileset>();
+    public levels = new Map<number, Level>();
+    public factories = new Map<string, (props: FactoryProps) => Entity | undefined>();
+    public fileLoader: FileLoader = FetchLoader;
+    public pathMap: PathMap | undefined;
+
+    private _imageLoader = new LoaderCache(ImageSource);
+    private _levelLoader = new LoaderCache(LevelResource);
+
+
+    public readonly startZIndex: number = 0;
+    public readonly textQuality: number = 4;
+    public readonly useExcaliburWiring: boolean = true;
+    public readonly useMapBackgroundColor: boolean = false;
+    public readonly useTilemapCameraStrategy: boolean = false;
+    public readonly headless: boolean = false;
+    public readonly strict: boolean = true;
+
+    constructor(public readonly path: string, options?: LdtkResourceOptions) {
+        const {
+            useExcaliburWiring,
+            useTilemapCameraStrategy,
+            entityIdentifierFactories,
+            pathMap,
+            useMapBackgroundColor,
+            fileLoader,
+            strict,
+            headless,
+            startZIndex
+        } = { ...options };
+        this.strict = strict ?? this.strict;
+        this.headless = headless ?? this.headless;
+        this.useExcaliburWiring = useExcaliburWiring ?? this.useExcaliburWiring;
+        this.useTilemapCameraStrategy = useTilemapCameraStrategy ?? this.useTilemapCameraStrategy;
+        this.useMapBackgroundColor = useMapBackgroundColor ?? this.useMapBackgroundColor;
+        this.startZIndex = startZIndex ?? this.startZIndex;
+        this.fileLoader = fileLoader ?? this.fileLoader;
+        this.pathMap = pathMap;
+        for (const key in entityIdentifierFactories) {
+           this.registerEntityIdentifierFactory(key, entityIdentifierFactories[key]);
         }
-
-        const originSplit = originPath.split('/');
-        const relativeSplit = relativePath.split('/');
-        // if origin path is a file, remove it so it's a directory
-        if (originSplit[originSplit.length - 1].includes('.')) {
-            originSplit.pop();
-        }
-        return originSplit.concat(relativeSplit).join('/');
-    }
-
-    constructor(public path: string) {
-        this._projectResource = new ex.Resource(path, 'json');
 
     }
     async load(): Promise<LdtkProjectMetadata> {
-        // TODO maybe use a runtime validation like Zod or something to verify the format is correct
+        const data = await this.fileLoader(this.path, 'json');
+        if (this.strict) {
+            try {
+                this.projectMetadata = LdtkProjectMetadata.parse(data);
+            } catch (e) {
+                console.error(`Could not parse LDtk map from location ${this.path}.\nExcalibur only supports the latest version of LDtk formats as of the plugin's release.`);
+                console.error(`Is your map file corrupted or being interpreted as the wrong type?`)
+                throw e;
+            }
+        } else {
+            this.projectMetadata = data as LdtkProjectMetadata;
+        }
 
+        if (compare(LdtkResource.supportedLdtkVersion, this.projectMetadata.jsonVersion ?? '0.0.0', ">")) {
+            console.warn(`The excalibur tiled plugin officially supports ${LdtkResource.supportedLdtkVersion}+, the current map has LDtk version ${this.projectMetadata.jsonVersion}`)
+         }
 
-        // after loading the initial meta
-        const metadata = await this._projectResource.load();
         // iterate through the defs
         // load the tilesets
         const imagesToLoad: Promise<HTMLImageElement>[] = [];
-        for (let tileset of metadata.defs.tilesets) {
-            const image = new ex.ImageSource(this.convertPath(this._projectResource.path, tileset.relPath));
-            const ss = ex.SpriteSheet.fromImageSource({
-                image,
-                grid: {
-                    rows: tileset.pxHei / tileset.tileGridSize,
-                    columns: tileset.pxWid / tileset.tileGridSize,
-                    spriteHeight: tileset.tileGridSize,
-                    spriteWidth: tileset.tileGridSize
-                }
-            });
-            this.tilesets.set(tileset.uid, {
-                metadata: tileset,
-                spriteSheet: ss
-            })
-            imagesToLoad.push(image.load());
+        for (let tileset of this.projectMetadata.defs.tilesets) {
+            if (tileset.relPath) {
+                const imagePath = pathRelativeToBase(this.path, tileset.relPath, this.pathMap);
+                const image = this._imageLoader.getOrAdd(imagePath);
+                const friendlyTileset = new Tileset({
+                    image,
+                    ldtkTileset: tileset
+                });
+                this.tilesets.set(tileset.uid, friendlyTileset);
+            } else {
+                // TODO handle embedded atlas
+            }
         }
 
         // iterate through the levels
-        //  load the level metadata
+        // load the level metadata
         const levelsToLoad: Promise<LdtkLevel>[] = [];
-        for (let level of metadata.levels) {
-            const levelJson = new ex.Resource<LdtkLevel>(this.convertPath(this._projectResource.path, level.externalRelPath), 'json');
-            const loadingPromise = levelJson.load();
-            levelsToLoad.push(loadingPromise);
-            loadingPromise.then(json => {
-                this.levels.set(level.uid, json);
-            });
+        for (let level of this.projectMetadata.levels) {
+            if (level.externalRelPath) {
+                const levelPath = pathRelativeToBase(this.path, level.externalRelPath, this.pathMap);
+                this._levelLoader.getOrAdd(levelPath, {
+                    headless: this.headless,
+                    strict: this.strict,
+                    fileLoader: this.fileLoader,
+                    imageLoader: this._imageLoader,
+                    pathMap: this.pathMap
+                });
+            } else {
+                // TODO handle null rel path
+                // Save levels separately not enabled
+                // Are these just embedded?
+            }
         }
 
-        await Promise.all([...imagesToLoad, ...levelsToLoad]);
-        return this.data = metadata;
+        await Promise.all([this._imageLoader.load(), this._levelLoader.load()]);
+        this._levelLoader.values().forEach(level => {
+            this.levels.set(level.data.ldtkLevel.uid, level.data);
+        });
+
+        // TODO build up layers
+
+        return this.data = this.projectMetadata;
     };
 
-    data!: LdtkProjectMetadata;
+    
     isLoaded(): boolean {
         return !!this.data;
     }
 
-    registerEntityType<TEntity extends ex.Actor>(ldtkEntityIdentifier: string, type: ExtendsActorConstructor<TEntity>) {
-        this.entityToConstructor.set(ldtkEntityIdentifier, type);
+    registerEntityIdentifierFactory(ldtkEntityIdentifier: string, factory: (props: FactoryProps) => Entity | undefined): void {
+        this.factories.set(ldtkEntityIdentifier, factory);
     }
 
-    parse(scene: ex.Scene) {
-        // TODO rename function
+    addToScene(scene: Scene) {
 
         // Parse all the data and produce excalibur objects
-        const tileMaps: ex.TileMap[] = [];
+        const tileMaps: TileMap[] = [];
         for (let [id, level] of this.levels.entries()) {
             const totalLayers = level.layerInstances.length;
             let currentLayer = 0;
@@ -247,28 +413,30 @@ export class LdtkResource implements ex.Loadable<LdtkProjectMetadata> {
                         const entityMetadata = this.data.defs.entities.find(e => {
                             return e.identifier === entity.__identifier
                         });
-                        let actor: ex.Actor;
+                        let actor: Actor;
 
-                        if (this.entityToConstructor.has(entity.__identifier)) {
-                            const type = this.entityToConstructor.get(entity.__identifier);
-                            if (type) {
-                                actor = new type({
-                                    name: entity.__identifier,
-                                    pos: ex.vec(entity.px[0], entity.px[1]),
-                                    width: entity.width,
-                                    height: entity.height,
-                                    anchor: ex.vec(entityMetadata?.pivotX ?? 0, entityMetadata?.pivotY ?? 0),
-                                    z: totalLayers - currentLayer
+                        if (this.factories.has(entity.__identifier)) {
+                            const factory = this.factories.get(entity.__identifier);
+                            if (factory) {
+                                const newEntity = factory({
+                                    type: entity.__identifier,
+                                    worldPos: vec(entity.px[0], entity.px[1]),
+                                    entity,
+                                    metadata: entityMetadata, //anchor: vec(entityMetadata?.pivotX ?? 0, entityMetadata?.pivotY ?? 0),
+                                    layer,
+                                    properties: new Map<string, any>()// TODO LDtk props
                                 });
-                                scene.add(actor);
+                                if (newEntity) {
+                                    scene.add(newEntity);
+                                }
                             }
                         } else {
-                            actor = new ex.Actor({
+                            actor = new Actor({
                                 name: entity.__identifier,
-                                pos: ex.vec(entity.px[0], entity.px[1]),
+                                pos: vec(entity.px[0], entity.px[1]),
                                 width: entity.width,
                                 height: entity.height,
-                                anchor: ex.vec(entityMetadata?.pivotX ?? 0, entityMetadata?.pivotY ?? 0),
+                                anchor: vec(entityMetadata?.pivotX ?? 0, entityMetadata?.pivotY ?? 0),
                                 z: totalLayers - currentLayer
                             });
                             const ts = this.tilesets.get(entity.__tile.tilesetUid);
@@ -290,7 +458,7 @@ export class LdtkResource implements ex.Loadable<LdtkProjectMetadata> {
 
                 if (layer.gridTiles?.length !== 0) {
                     // TODO fix the grid size
-                    const tilemap = new ex.TileMap({
+                    const tilemap = new TileMap({
                         name: layer.__identifier,
                         tileWidth: this.data.defaultGridSize,
                         tileHeight: this.data.defaultGridSize,
@@ -323,7 +491,7 @@ export class LdtkResource implements ex.Loadable<LdtkProjectMetadata> {
                 if (layer.intGridCsv?.length !== 0) {
                     const rows = layer.__cHei;
                     const columns = layer.__cWid;
-                    const tilemap = new ex.TileMap({
+                    const tilemap = new TileMap({
                         name: layer.__identifier,
                         tileWidth: layer.__gridSize,
                         tileHeight: layer.__gridSize,
@@ -342,7 +510,7 @@ export class LdtkResource implements ex.Loadable<LdtkProjectMetadata> {
                         const solidValue = layerMetadata.intGridValues.find(val => {
                             return val?.identifier?.toLocaleLowerCase() === 'solid';
                         });
-                    
+
                         for (let i = 0; i < layer.intGridCsv.length; i++) {
                             const xCoord = i % columns;
                             const yCoord = Math.floor(i / columns);

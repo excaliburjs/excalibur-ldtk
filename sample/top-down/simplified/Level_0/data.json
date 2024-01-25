@@ -49,7 +49,10 @@
 				"width": 16,
 				"height": 16,
 				"color": 12463919,
-				"customFields" : {}
+				"customFields": {
+					"Health": 100,
+					"Attack": 25
+				}
 			}
 		],
 		"Sword": [

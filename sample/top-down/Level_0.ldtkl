@@ -5,7 +5,7 @@
 		"doc": "https://ldtk.io/json",
 		"schema": "https://ldtk.io/files/JSON_SCHEMA.json",
 		"appAuthor": "Sebastien 'deepnight' Benard",
-		"appVersion": "1.4.1",
+		"appVersion": "1.5.3",
 		"url": "https://ldtk.io"
 	},
 	"identifier": "Level_0",
@@ -156,14 +156,14 @@
 					"__tags": [],
 					"__tile": { "tilesetUid": 1, "x": 112, "y": 128, "w": 16, "h": 16 },
 					"__smartColor": "#D77643",
-					"__worldX": 208,
-					"__worldY": 128,
 					"iid": "5efeae70-6280-11ee-bc44-77d1860dfd25",
 					"width": 16,
 					"height": 16,
 					"defUid": 6,
 					"px": [208,128],
-					"fieldInstances": []
+					"fieldInstances": [],
+					"__worldX": 208,
+					"__worldY": 128
 				},
 				{
 					"__identifier": "Spell_Book",
@@ -172,14 +172,14 @@
 					"__tags": [],
 					"__tile": { "tilesetUid": 1, "x": 112, "y": 144, "w": 16, "h": 16 },
 					"__smartColor": "#EAD4AA",
-					"__worldX": 192,
-					"__worldY": 176,
 					"iid": "61f977e0-6280-11ee-bc44-a1335ec20886",
 					"width": 16,
 					"height": 16,
 					"defUid": 7,
 					"px": [192,176],
-					"fieldInstances": []
+					"fieldInstances": [],
+					"__worldX": 192,
+					"__worldY": 176
 				},
 				{
 					"__identifier": "PlayerStart",
@@ -188,14 +188,17 @@
 					"__tags": [],
 					"__tile": { "tilesetUid": 8, "x": 0, "y": 0, "w": 16, "h": 16 },
 					"__smartColor": "#BE2F2F",
-					"__worldX": 64,
-					"__worldY": 144,
 					"iid": "638cc210-6280-11ee-bc44-cb342b86cd82",
 					"width": 16,
 					"height": 16,
 					"defUid": 5,
 					"px": [64,144],
-					"fieldInstances": []
+					"fieldInstances": [
+						{ "__identifier": "Health", "__type": "Float", "__value": 100, "__tile": null, "defUid": 13, "realEditorValues": [] },
+						{ "__identifier": "Attack", "__type": "Float", "__value": 25, "__tile": null, "defUid": 14, "realEditorValues": [] }
+					],
+					"__worldX": 64,
+					"__worldY": 144
 				},
 				{
 					"__identifier": "Sword",
@@ -204,14 +207,14 @@
 					"__tags": [],
 					"__tile": { "tilesetUid": 1, "x": 128, "y": 144, "w": 16, "h": 16 },
 					"__smartColor": "#E4A672",
-					"__worldX": 176,
-					"__worldY": 128,
 					"iid": "9e10ab90-6280-11ee-bc44-a5424234ea8a",
 					"width": 16,
 					"height": 16,
 					"defUid": 11,
 					"px": [176,128],
-					"fieldInstances": [{ "__identifier": "attack", "__type": "Int", "__value": 50, "__tile": null, "defUid": 12, "realEditorValues": [null] }]
+					"fieldInstances": [{ "__identifier": "attack", "__type": "Int", "__value": 50, "__tile": null, "defUid": 12, "realEditorValues": [null] }],
+					"__worldX": 176,
+					"__worldY": 128
 				}
 			]
 		},
