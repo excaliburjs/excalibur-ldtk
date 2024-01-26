@@ -3,7 +3,7 @@ import { EntityLayer } from "./entity-layer";
 import { IntGridLayer } from "./intgrid-layer";
 import { LdtkResource } from "./ldtk-resource";
 import { TileLayer } from "./tile-layer";
-import { LdtkLevel, LdtkProjectMetadata } from "./types";
+import { LdtkLevel } from "./types";
 
 export class Level {
 

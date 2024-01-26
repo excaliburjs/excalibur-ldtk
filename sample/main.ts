@@ -1,6 +1,7 @@
-import { LdtkResource } from '@excalibur-ldtk';
+
 import * as ex from "excalibur";
 import { Player } from './player';
+import { Resources, loader } from "./resources";
 
 const game = new ex.Engine({
     resolution: {
@@ -14,14 +15,11 @@ const game = new ex.Engine({
     suppressPlayButton: true,
     antialiasing: false
 });
-const ldtkResource = new LdtkResource('./top-down.ldtk');
-
-const loader = new ex.Loader([ldtkResource]);
 
 game.start(loader).then(() => {
     console.log('Game start!');
 
-    ldtkResource.registerEntityIdentifierFactory('PlayerStart', (props) => {
+    Resources.LdtkResource.registerEntityIdentifierFactory('PlayerStart', (props) => {
         const player = new Player({
             name: 'player',
             anchor: ex.vec(props.entity.__pivot[0],props.entity.__pivot[1]),
@@ -34,5 +32,8 @@ game.start(loader).then(() => {
     });
     // Provide a type to the plugin to use for a specific entity identifier
     // Player.ts
-    ldtkResource.addToScene(game.currentScene);
+    Resources.LdtkResource.addToScene(game.currentScene, {
+        pos: ex.vec(0, 0),
+        levelFilter: ['Level_0']
+    });
 });

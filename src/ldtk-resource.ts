@@ -4,7 +4,7 @@ import { FetchLoader, FileLoader } from './file-loader';
 import { LdtkEntityDefinition, LdtkEntityInstance, LdtkProjectMetadata } from './types';
 import { compare } from 'compare-versions';
 import { LoaderCache } from './loader-cache';
-import { Entity, ImageSource, Loadable, Scene, Vector } from 'excalibur';
+import { Entity, ImageSource, Loadable, Scene, Vector, vec } from 'excalibur';
 import { LevelResource } from './level-resource';
 import { Tileset } from './tileset';
 import { Level } from './level';
@@ -12,7 +12,10 @@ import { EntityLayer } from './entity-layer';
 import { IntGridLayer } from './intgrid-layer';
 
 export interface AddToSceneOptions {
-    pos: Vector;
+    /**
+     * Optionally set the position to place the levels
+     */
+    pos?: Vector;
     /**
      * Optionally add only specific levels to the scene
      */
@@ -44,10 +47,6 @@ export interface FactoryProps {
      * Layer
      */
     layer: EntityLayer;
-    /**
-     * LDtk properties, these are all converted to lowercase keys, and lowercase if the value is a string
-     */
-    properties: Record<string, any>;
 }
 
 export interface LdtkResourceOptions {
@@ -139,6 +138,7 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
 
     public tilesets = new Map<number, Tileset>();
     public levels = new Map<number, Level>();
+    public levelsByName = new Map<string, Level>();
     public factories = new Map<string, (props: FactoryProps) => Entity | undefined>();
     public fileLoader: FileLoader = FetchLoader;
     public pathMap: PathMap | undefined;
@@ -237,6 +237,7 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
         await Promise.all([this._imageLoader.load(), this._levelLoader.load()]);
         this._levelLoader.values().forEach(level => {
             this.levels.set(level.data.ldtkLevel.uid, level.data);
+            this.levelsByName.set(level.data.ldtkLevel.identifier, level.data);
         });
 
         // TODO build up layers that aren't external
@@ -250,11 +251,87 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
 
     registerEntityIdentifierFactory(ldtkEntityIdentifier: string, factory: (props: FactoryProps) => Entity | undefined): void {
         this.factories.set(ldtkEntityIdentifier, factory);
+        if (this.isLoaded()) {
+            for (let entityLayer of this.getEntityLayers()) {
+                entityLayer.runFactory(ldtkEntityIdentifier);
+            }
+        }
+    }
+
+    /**
+     * Get a level by identifier
+     * @param identifier 
+     * @returns 
+     */
+    getLevel(identifier: string): Level | undefined {
+        return this.levelsByName.get(identifier);
+    }
+
+    /**
+     * Get the entity layers, optionally provide a level identifier to filter to
+     * @param identifier 
+     */
+    getEntityLayers(identifier?: string): EntityLayer[] {
+        let results: EntityLayer[] = [];
+        if (identifier) {
+            const level = this.getLevel(identifier);
+            if (level) {
+                for (let layer of level.layers) {
+                    if (layer instanceof EntityLayer) {
+                        results.push(layer);
+                    }
+                }
+            }
+        } else {
+            for (const level of this.levels.values()) {
+                for (let layer of level.layers) {
+                    if (layer instanceof EntityLayer) {
+                        results.push(layer);
+                    }
+                }
+            }
+        }
+
+        return results
+    }
+
+    /**
+     * Search layer for entities that match an identifier (case insensitive)
+     * @param identifier 
+     * @returns 
+     */
+    getLdtkEntitiesByIdentifier(identifier: string): LdtkEntityInstance[] {
+        let results: LdtkEntityInstance[] = [];
+        const layers = this.getEntityLayers();
+        for (let layer of layers) {
+            results = results.concat(layer.getLdtkEntitiesByIdentifier(identifier));
+        }
+        return results;
+    }
+
+    /**
+     * Search layer for entities that match a field and optionally a value (both case insensitive)
+     * @param fieldIdentifier 
+     * @param value
+     */
+    getLdtkEntitiesByField(fieldIdentifier: string, value?: any): LdtkEntityInstance[] {
+        let results: LdtkEntityInstance[] = [];
+        const layers = this.getEntityLayers();
+        for (let layer of layers) {
+            results = results.concat(layer.getLdtkEntitiesByField(fieldIdentifier, value));
+        }
+        return results;
     }
 
     addToScene(scene: Scene, options?: AddToSceneOptions) {
         // TODO options
+        
         for (let [id, level] of this.levels.entries()) {
+            if (options?.levelFilter?.length) {
+                if (!options.levelFilter.includes(level.ldtkLevel.identifier)) {
+                    continue;
+                }
+            }
             for (let layer of level.layers) {
                 if (layer instanceof TileLayer || layer instanceof IntGridLayer) {
                     scene.add(layer.tilemap)
@@ -265,5 +342,18 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
                 }
             }
         }
+
+        // TODO wire up camera if using wiring
+        const camera = this.getLdtkEntitiesByField('camera', true)[0];
+        if (camera) {
+            scene.camera.pos = vec(camera.px[0], camera.px[0]);
+            const zoom = camera.fieldInstances.find(f => f.__identifier.toLocaleLowerCase() === 'zoom');
+            if (zoom) {
+                scene.camera.zoom = +zoom.__value;
+            }
+        }
+        
+
+
     }
 }

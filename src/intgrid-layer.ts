@@ -1,4 +1,4 @@
-import { TileMap } from "excalibur";
+import { TileMap, vec } from "excalibur";
 import { LdtkLayerInstance } from "./types";
 import { LdtkResource } from "./ldtk-resource";
 
@@ -7,6 +7,7 @@ export class IntGridLayer {
     public ldtkLayer: LdtkLayerInstance;
     public tilemap!: TileMap;
     constructor(ldtkLayer: LdtkLayerInstance, resource: LdtkResource, public readonly order: number) {
+        const offset = vec(ldtkLayer.__pxTotalOffsetX, ldtkLayer.__pxTotalOffsetY);
         this.ldtkLayer = ldtkLayer;
         if (ldtkLayer.intGridCsv.length) {
 
@@ -14,6 +15,7 @@ export class IntGridLayer {
             const columns = ldtkLayer.__cWid;
             this.tilemap = new TileMap({
                 name: ldtkLayer.__identifier,
+                pos: offset,
                 tileWidth: ldtkLayer.__gridSize,
                 tileHeight: ldtkLayer.__gridSize,
                 rows,

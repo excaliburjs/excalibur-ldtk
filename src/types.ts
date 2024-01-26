@@ -31,7 +31,7 @@ export const LdtkEntityInstance = z.object({
     __pivot: LdtkPixel,
     __smartColor: z.string(),
     __tags: z.array(z.string()),
-    __tile: LdtkTilesetRectangle,
+    __tile: LdtkTilesetRectangle.nullable(),
     __worldX: z.number().nullable(),
     __worldY: z.number().nullable(),
     defUid: z.number(),
@@ -183,7 +183,7 @@ export const LdtkEntityDefinition = z.object({
     nineSliceBorders: z.array(z.number()),
     pivotX: z.number(),
     pivotY: z.number(),
-    tileRect: LdtkTilesetRectangle,
+    tileRect: LdtkTilesetRectangle.nullable(),
     tileRenderMode: z.union([
         z.literal("Cover"),
         z.literal("FitInside"),

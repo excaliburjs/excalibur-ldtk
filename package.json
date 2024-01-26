@@ -11,8 +11,8 @@
     "test:integration": "webpack --config webpack.config.test.js && ex-test -d ./example -t ./test/integration/test.js",
     "test": "npm run test:unit && npm run test:integration"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Erik Onarheim",
+  "license": "BSD-2-Clause",
   "devDependencies": {
     "excalibur": "~0.28.6",
     "raw-loader": "4.0.2",

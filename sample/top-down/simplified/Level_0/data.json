@@ -6,7 +6,12 @@
 	"width": 256,
 	"height": 256,
 	"bgColor": "#696A79",
-	"neighbourLevels": [],
+	"neighbourLevels": [
+		{
+			"levelIid": "471aa8b0-b0a0-11ee-83ad-197e8057ca90",
+			"dir": "e"
+		}
+	],
 	"customFields" : {},
 	"layers": [
 		"Background.png",
@@ -67,6 +72,22 @@
 				"color": 14984818,
 				"customFields": {
 					"attack": 50
+				}
+			}
+		],
+		"Camera": [
+			{
+				"id": "Camera",
+				"iid": "92de9740-b0a0-11ee-83ad-49d65ebdbe80",
+				"layer": "Objects",
+				"x": 104,
+				"y": 136,
+				"width": 16,
+				"height": 16,
+				"color": 16711748,
+				"customFields": {
+					"camera": true,
+					"zoom": 2
 				}
 			}
 		]

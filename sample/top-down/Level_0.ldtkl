@@ -215,6 +215,28 @@
 					"fieldInstances": [{ "__identifier": "attack", "__type": "Int", "__value": 50, "__tile": null, "defUid": 12, "realEditorValues": [null] }],
 					"__worldX": 176,
 					"__worldY": 128
+				},
+				{
+					"__identifier": "Camera",
+					"__grid": [6,8],
+					"__pivot": [0.5,0.5],
+					"__tags": [],
+					"__tile": null,
+					"__smartColor": "#FF0044",
+					"iid": "92de9740-b0a0-11ee-83ad-49d65ebdbe80",
+					"width": 16,
+					"height": 16,
+					"defUid": 15,
+					"px": [104,136],
+					"fieldInstances": [
+						{ "__identifier": "camera", "__type": "Bool", "__value": true, "__tile": null, "defUid": 16, "realEditorValues": [{
+							"id": "V_Bool",
+							"params": [ true ]
+						}] },
+						{ "__identifier": "zoom", "__type": "Float", "__value": 2, "__tile": null, "defUid": 18, "realEditorValues": [] }
+					],
+					"__worldX": 104,
+					"__worldY": 136
 				}
 			]
 		},
@@ -501,5 +523,5 @@
 			"entityInstances": []
 		}
 	],
-	"__neighbours": []
+	"__neighbours": [{ "levelIid": "471aa8b0-b0a0-11ee-83ad-197e8057ca90", "dir": "e" }]
 }
