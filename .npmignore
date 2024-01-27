@@ -5,6 +5,7 @@ node_modules
 coverage
 example
 node_cache/*
+sample/
 test
 test-results
 playwright-report
