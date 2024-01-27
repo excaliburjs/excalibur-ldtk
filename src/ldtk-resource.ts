@@ -240,9 +240,9 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
                     pathMap: this.pathMap
                 });
             } else {
-                // TODO handle null rel path
-                // Save levels separately not enabled
-                // Are these just embedded?
+                const friendlyLevel = new Level(level, this);
+                this.levels.set(level.uid, friendlyLevel);
+                this.levelsByName.set(level.identifier, friendlyLevel);
             }
         }
 
