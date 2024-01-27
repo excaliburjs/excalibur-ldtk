@@ -19,15 +19,15 @@ export class Level {
             let layers = ldtkLevel.layerInstances.slice().reverse();
             for (let layer of layers) {
                 if (layer.entityInstances?.length !== 0) {
-                    this.layers.push(new EntityLayer(layer, resource, order));
+                    this.layers.push(new EntityLayer(this, layer, resource, order));
                 }
 
                 if (layer.gridTiles?.length !== 0) {
-                    this.layers.push(new TileLayer(layer, resource, order));
+                    this.layers.push(new TileLayer(this, layer, resource, order));
                 }
 
                 if (layer.intGridCsv?.length !== 0) {
-                    this.layers.push(new IntGridLayer(layer, resource, order));
+                    this.layers.push(new IntGridLayer(this, layer, resource, order));
                 }
                 order++;
             }

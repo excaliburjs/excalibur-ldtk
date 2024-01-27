@@ -28,12 +28,13 @@ game.start(loader).then(() => {
             pos: props.worldPos,
             z: props.layer.order
         });
+        game.currentScene.camera.strategy.lockToActor(player);
         return player;
     });
     // Provide a type to the plugin to use for a specific entity identifier
     // Player.ts
     Resources.LdtkResource.addToScene(game.currentScene, {
         pos: ex.vec(0, 0),
-        levelFilter: ['Level_0']
+        // levelFilter: ['Level_0']
     });
 });

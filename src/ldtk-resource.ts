@@ -4,7 +4,7 @@ import { FetchLoader, FileLoader } from './file-loader';
 import { LdtkEntityDefinition, LdtkEntityInstance, LdtkProjectMetadata } from './types';
 import { compare } from 'compare-versions';
 import { LoaderCache } from './loader-cache';
-import { Entity, ImageSource, Loadable, Scene, Vector, vec } from 'excalibur';
+import { BoundingBox, Entity, ImageSource, Loadable, Scene, Vector, vec } from 'excalibur';
 import { LevelResource } from './level-resource';
 import { Tileset } from './tileset';
 import { Level } from './level';
@@ -14,12 +14,24 @@ import { IntGridLayer } from './intgrid-layer';
 export interface AddToSceneOptions {
     /**
      * Optionally set the position to place the levels
+     * 
+     * Default is vec(0, 0)
      */
     pos?: Vector;
     /**
      * Optionally add only specific levels to the scene
+     * 
+     * Default includes all levels
      */
     levelFilter?: string[];
+
+    /**
+     * Optionally use the level world offsets, this is useful if your levels are arranged the way you want them
+     * to appear in your game.
+     * 
+     * Default is true
+     */
+    useLevelOffsets?: boolean;
 }
 
 export interface FactoryProps {
@@ -176,7 +188,7 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
         this.fileLoader = fileLoader ?? this.fileLoader;
         this.pathMap = pathMap;
         for (const key in entityIdentifierFactories) {
-           this.registerEntityIdentifierFactory(key, entityIdentifierFactories[key]);
+            this.registerEntityIdentifierFactory(key, entityIdentifierFactories[key]);
         }
 
     }
@@ -196,7 +208,7 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
 
         if (compare(LdtkResource.supportedLdtkVersion, this.projectMetadata.jsonVersion ?? '0.0.0', ">")) {
             console.warn(`The excalibur tiled plugin officially supports ${LdtkResource.supportedLdtkVersion}+, the current map has LDtk version ${this.projectMetadata.jsonVersion}`)
-         }
+        }
 
         // iterate through the defs
         // load the tilesets
@@ -295,6 +307,52 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
         return results
     }
 
+    getTileLayers(identifier?: string): TileLayer[] {
+        let results: TileLayer[] = [];
+        if (identifier) {
+            const level = this.getLevel(identifier);
+            if (level) {
+                for (let layer of level.layers) {
+                    if (layer instanceof TileLayer) {
+                        results.push(layer);
+                    }
+                }
+            }
+        } else {
+            for (const level of this.levels.values()) {
+                for (let layer of level.layers) {
+                    if (layer instanceof TileLayer) {
+                        results.push(layer);
+                    }
+                }
+            }
+        }
+        return results;
+    }
+
+    getIntGridLayers(identifier?: string): IntGridLayer[] {
+        let results: IntGridLayer[] = [];
+        if (identifier) {
+            const level = this.getLevel(identifier);
+            if (level) {
+                for (let layer of level.layers) {
+                    if (layer instanceof IntGridLayer) {
+                        results.push(layer);
+                    }
+                }
+            }
+        } else {
+            for (const level of this.levels.values()) {
+                for (let layer of level.layers) {
+                    if (layer instanceof IntGridLayer) {
+                        results.push(layer);
+                    }
+                }
+            }
+        }
+        return results;
+    }
+
     /**
      * Search layer for entities that match an identifier (case insensitive)
      * @param identifier 
@@ -325,7 +383,7 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
 
     addToScene(scene: Scene, options?: AddToSceneOptions) {
         // TODO options
-        
+
         for (let [id, level] of this.levels.entries()) {
             if (options?.levelFilter?.length) {
                 if (!options.levelFilter.includes(level.ldtkLevel.identifier)) {
@@ -352,7 +410,23 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
                 scene.camera.zoom = +zoom.__value;
             }
         }
-        
+
+        if (this.useTilemapCameraStrategy) {
+            let bounds = new BoundingBox();
+            for (const level of this.levels.values()) {
+                const firstTileLayer = this.getTileLayers(level.ldtkLevel.identifier)[0];
+                if (firstTileLayer) {
+                    bounds = bounds.combine(
+                        BoundingBox.fromDimension(
+                            firstTileLayer.tilemap.tileWidth * firstTileLayer.tilemap.columns,
+                            firstTileLayer.tilemap.tileHeight * firstTileLayer.tilemap.rows,
+                            Vector.Zero,
+                            firstTileLayer.tilemap.pos)
+                    );
+                }
+            }
+            scene.camera.strategy.limitCameraBounds(bounds);
+        }
 
 
     }

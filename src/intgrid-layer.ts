@@ -1,13 +1,15 @@
 import { TileMap, vec } from "excalibur";
 import { LdtkLayerInstance } from "./types";
 import { LdtkResource } from "./ldtk-resource";
+import { Level } from "./level";
 
 export class IntGridLayer {
 
     public ldtkLayer: LdtkLayerInstance;
     public tilemap!: TileMap;
-    constructor(ldtkLayer: LdtkLayerInstance, resource: LdtkResource, public readonly order: number) {
-        const offset = vec(ldtkLayer.__pxTotalOffsetX, ldtkLayer.__pxTotalOffsetY);
+    constructor(level: Level, ldtkLayer: LdtkLayerInstance, resource: LdtkResource, public readonly order: number) {
+        const worldPos = vec(level.ldtkLevel.worldX, level.ldtkLevel.worldY);
+        const offset = vec(ldtkLayer.__pxTotalOffsetX, ldtkLayer.__pxTotalOffsetY).add(worldPos);
         this.ldtkLayer = ldtkLayer;
         if (ldtkLayer.intGridCsv.length) {
 
@@ -21,10 +23,8 @@ export class IntGridLayer {
                 rows,
                 columns,
             });
-            // TODO define what integers mean solid
 
             // find the intgrid metadata
-
             const layerMetadata = resource.projectMetadata.defs.layers.find(l => {
                 return ldtkLayer.__identifier === l.identifier;
             });

@@ -1,18 +1,17 @@
 import { Actor, Entity, vec } from "excalibur";
 import { LdtkResource } from "./ldtk-resource";
 import { LdtkEntityInstance, LdtkLayerInstance } from "./types";
+import { Level } from "./level";
 
 export class EntityLayer {
     public entities: Entity[] = [];
     public ldtkToEntity = new Map<LdtkEntityInstance, Entity>();
     public entityToLdtk = new Map<Entity, LdtkEntityInstance>();
-    constructor(public readonly ldtkLayer: LdtkLayerInstance, private resource: LdtkResource, public readonly order: number) {
-        const offset = vec(ldtkLayer.__pxTotalOffsetX, ldtkLayer.__pxTotalOffsetY);
+    constructor(level: Level, public readonly ldtkLayer: LdtkLayerInstance, private resource: LdtkResource, public readonly order: number) {
+        const worldPos = vec(level.ldtkLevel.worldX, level.ldtkLevel.worldY);
+        const offset = vec(ldtkLayer.__pxTotalOffsetX, ldtkLayer.__pxTotalOffsetY).add(worldPos);
         if (ldtkLayer.entityInstances) {
             for (let entity of ldtkLayer.entityInstances) {
-                // TODO come up with tags that make sense to communicate to excalibur
-                // TODO metadata pivotX/Y
-                // TODO tileRenderMode
                 const entityMetadata = resource.projectMetadata.defs.entities.find(e => {
                     return e.identifier === entity.__identifier
                 });
@@ -97,6 +96,30 @@ export class EntityLayer {
                 }
             }
         }
+    }
+
+    getEntitiesByIdentifier(identifier: string): Entity[] {
+        const ldtkEntities = this.getLdtkEntitiesByIdentifier(identifier);
+        let results: Entity[] = [];
+        for (const ldtk of ldtkEntities) {
+            const maybeEntity = this.ldtkToEntity.get(ldtk);
+            if (maybeEntity) {
+                results.push(maybeEntity);
+            }
+        }
+        return results;
+    }
+
+    getEntitiesByField(fieldIdentifier: string, value?: any): Entity[] {
+        const ldtkEntities = this.getLdtkEntitiesByField(fieldIdentifier, value);
+        let results: Entity[] = [];
+        for (const ldtk of ldtkEntities) {
+            const maybeEntity = this.ldtkToEntity.get(ldtk);
+            if (maybeEntity) {
+                results.push(maybeEntity);
+            }
+        }
+        return results;
     }
 
     /**
