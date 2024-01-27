@@ -73,21 +73,19 @@ export interface LdtkResourceOptions {
      * Default true. If false, only tilemap will be parsed and displayed, it's up to you to wire up any excalibur behavior.
      * Automatically wires excalibur to the following
      * * Wire up current scene camera
-     * * Make Actors/Tiles with colliders on Tiled tiles & Tiled objects
-     * * Support solid layers
      *
      * Read more at excaliburjs.com!
      */
     useExcaliburWiring?: boolean;
 
     /**
-     * Sets excalibur's background color to match the Tiled map
+     * Sets excalibur's background color to match the LDtk map
      */
     useMapBackgroundColor?: boolean;
 
     /**
      * The pathMap helps work around odd things bundlers do with static files by providing a way to redirect the original
-     * source paths in the Tiled files to new locations.
+     * source paths in the LDtk files to new locations.
      *
      * When the LDtk resource comes across something that matches `path`, it will use the output string instead.
      * 
@@ -113,16 +111,16 @@ export interface LdtkResourceOptions {
     fileLoader?: FileLoader;
 
     /**
-     * By default `true`, means Tiled files must pass the plugins Typed parse pass.
+     * By default `true`, means LDtk files must pass the plugins Typed parse pass.
      *
-     * If you have something that the Tiled plugin does not expect, you can set this to false and it will do it's best
-     * to parse the Tiled source map file.
+     * If you have something that the LDtk plugin does not expect, you can set this to false and it will do it's best
+     * to parse the LDtk source map file.
      */
     strict?: boolean;
 
     /**
     * Plugin will operate in headless mode and skip all graphics related
-    * excalibur items including creating ImageSource's for Tiled items.
+    * excalibur items including creating ImageSource's for LDtk items.
     *
     * Default false.
     */
@@ -207,7 +205,7 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
         }
 
         if (compare(LdtkResource.supportedLdtkVersion, this.projectMetadata.jsonVersion ?? '0.0.0', ">")) {
-            console.warn(`The excalibur tiled plugin officially supports ${LdtkResource.supportedLdtkVersion}+, the current map has LDtk version ${this.projectMetadata.jsonVersion}`)
+            console.warn(`The excalibur ldtk plugin officially supports ${LdtkResource.supportedLdtkVersion}+, the current map has LDtk version ${this.projectMetadata.jsonVersion}`)
         }
 
         // iterate through the defs
