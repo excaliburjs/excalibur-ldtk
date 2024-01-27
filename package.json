@@ -1,7 +1,7 @@
 {
   "name": "@excaliburjs/plugin-ldtk",
   "version": "0.28.7",
-  "description": "",
+  "description": "Plugin to support LDtk generated tile maps in Excalibur",
   "main": "dist/excalibur-ldtk.min.js",
   "typings": "dist/src/index.d.ts",
   "scripts": {
@@ -15,7 +15,7 @@
   "author": "Erik Onarheim",
   "license": "BSD-2-Clause",
   "devDependencies": {
-    "excalibur": "~0.28.6",
+    "excalibur": "~0.28.7",
     "raw-loader": "4.0.2",
     "ts-loader": "9.5.0",
     "typescript": "5.2.2",
@@ -24,7 +24,7 @@
     "webpack-dev-server": "4.15.1"
   },
   "peerDependencies": {
-    "excalibur": "~0.28.6"
+    "excalibur": "~0.28.7"
   },
   "dependencies": {
     "compare-versions": "6.1.0",
