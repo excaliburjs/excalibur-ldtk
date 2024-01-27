@@ -17,5 +17,52 @@
 		"Background.png",
 		"Foreground.png"
 	],
-	"entities" : {}
+	"entities": {
+		"Potion": [
+			{
+				"id": "Potion",
+				"iid": "7a775d10-b0a0-11ee-83ad-695661b79578",
+				"layer": "Objects",
+				"x": 64,
+				"y": 160,
+				"width": 16,
+				"height": 16,
+				"color": 14120515,
+				"customFields" : {}
+			},
+			{
+				"id": "Potion",
+				"iid": "7b21cde0-b0a0-11ee-83ad-e9253139d30b",
+				"layer": "Objects",
+				"x": 96,
+				"y": 96,
+				"width": 16,
+				"height": 16,
+				"color": 14120515,
+				"customFields" : {}
+			},
+			{
+				"id": "Potion",
+				"iid": "7b9d6680-b0a0-11ee-83ad-df3978610342",
+				"layer": "Objects",
+				"x": 144,
+				"y": 208,
+				"width": 16,
+				"height": 16,
+				"color": 14120515,
+				"customFields" : {}
+			},
+			{
+				"id": "Potion",
+				"iid": "7c364b20-b0a0-11ee-83ad-c792b327cf7c",
+				"layer": "Objects",
+				"x": 208,
+				"y": 112,
+				"width": 16,
+				"height": 16,
+				"color": 14120515,
+				"customFields" : {}
+			}
+		]
+	}
 }

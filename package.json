@@ -1,8 +1,9 @@
 {
   "name": "@excaliburjs/plugin-ldtk",
-  "version": "1.0.0",
+  "version": "0.28.7",
   "description": "",
-  "main": "index.js",
+  "main": "dist/excalibur-ldtk.min.js",
+  "typings": "dist/src/index.d.ts",
   "scripts": {
     "start": "webpack-dev-server --config webpack.config.test.js --open",
     "watch": "webpack --progress --watch",

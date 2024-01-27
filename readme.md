@@ -1,8 +1,32 @@
 # Excalibur LDtk Plugin
 
-⚠️ WARNING this is currently under active development an is not ready for use ⚠️
-
 This extension adds support for LDtk tile maps from https://ldtk.io/ in Excalibur!
+
+This plugin supports the latest released version of LDtk, currently 1.5.3.
+
+## Installation
+
+```sh
+npm install @excaliburjs/plugin-ldtk
+```
+
+Create your resource, load it, then add it to your scene!
+
+```typescript
+
+const game = new ex.Engine({...});
+
+const ldtkMap = new LdtkResource('./path/to/my/cool-map.ldtk');
+
+const loader = new ex.Loader([ldtkMap]);
+
+game.start(loader).then(() => {
+    ldtkMap.addToScene(game.currentScene);
+});
+```
+
+Read the full documentation at https://excaliburjs.com/docs/ldtk-plugin
+
 
 ## Local Development
 

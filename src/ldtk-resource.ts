@@ -4,7 +4,7 @@ import { FetchLoader, FileLoader } from './file-loader';
 import { LdtkEntityDefinition, LdtkEntityInstance, LdtkProjectMetadata } from './types';
 import { compare } from 'compare-versions';
 import { LoaderCache } from './loader-cache';
-import { BoundingBox, Entity, ImageSource, Loadable, Scene, Vector, vec } from 'excalibur';
+import { BoundingBox, Entity, ImageSource, Loadable, Scene, TransformComponent, Vector, vec } from 'excalibur';
 import { LevelResource } from './level-resource';
 import { Tileset } from './tileset';
 import { Level } from './level';
@@ -133,7 +133,7 @@ export interface LdtkResourceOptions {
      *
      * Defaults true, if false the camera will use the layer bounds to keep the camera from showing the background.
      */
-    useTilemapCameraStrategy?: boolean; // TODO implement
+    useTilemapCameraStrategy?: boolean;
 
     /**
      * Configure custom Actor/Entity factory functions to construct Actors/Entities
@@ -223,7 +223,7 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
                 });
                 this.tilesets.set(tileset.uid, friendlyTileset);
             } else {
-                // TODO handle embedded atlas
+                console.warn(`No tileset image provided for ${tileset.identifier}`);
             }
         }
 
@@ -231,6 +231,7 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
         // load the level metadata
         for (let level of this.projectMetadata.levels) {
             if (level.externalRelPath) {
+                // external levels
                 const levelPath = pathRelativeToBase(this.path, level.externalRelPath, this.pathMap);
                 this._levelLoader.getOrAdd(levelPath, this, {
                     headless: this.headless,
@@ -240,6 +241,7 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
                     pathMap: this.pathMap
                 });
             } else {
+                // embedded levels
                 const friendlyLevel = new Level(level, this);
                 this.levels.set(level.uid, friendlyLevel);
                 this.levelsByName.set(level.identifier, friendlyLevel);
@@ -251,8 +253,6 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
             this.levels.set(level.data.ldtkLevel.uid, level.data);
             this.levelsByName.set(level.data.ldtkLevel.identifier, level.data);
         });
-
-        // TODO build up layers that aren't external
 
         return this.data = this.projectMetadata;
     };
@@ -382,7 +382,7 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
     }
 
     addToScene(scene: Scene, options?: AddToSceneOptions) {
-        // TODO options
+        const { pos, useLevelOffsets } = {pos: vec(0, 0), useLevelOffsets: true, ...options};
 
         for (let [id, level] of this.levels.entries()) {
             if (options?.levelFilter?.length) {
@@ -392,22 +392,34 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
             }
             for (let layer of level.layers) {
                 if (layer instanceof TileLayer || layer instanceof IntGridLayer) {
+                    layer.tilemap.pos = layer.tilemap.pos.add(pos);
+                    if (!useLevelOffsets) {
+                        layer.tilemap.pos = layer.tilemap.pos.sub(layer.worldPos);
+                    }
                     scene.add(layer.tilemap)
                 } else {
                     for (let entity of layer.entities) {
+                        const tx = entity.get(TransformComponent);
+                        if (tx) {
+                            tx.pos = tx.pos.add(pos);
+                            if (!useLevelOffsets) {
+                                tx.pos = tx.pos.sub(layer.worldPos);
+                            }
+                        }
                         scene.add(entity);
                     }
                 }
             }
         }
 
-        // TODO wire up camera if using wiring
-        const camera = this.getLdtkEntitiesByField('camera', true)[0];
-        if (camera) {
-            scene.camera.pos = vec(camera.px[0], camera.px[0]);
-            const zoom = camera.fieldInstances.find(f => f.__identifier.toLocaleLowerCase() === 'zoom');
-            if (zoom) {
-                scene.camera.zoom = +zoom.__value;
+        if(this.useExcaliburWiring) {
+            const camera = this.getLdtkEntitiesByField('camera', true)[0];
+            if (camera) {
+                scene.camera.pos = vec(camera.px[0], camera.px[0]);
+                const zoom = camera.fieldInstances.find(f => f.__identifier.toLocaleLowerCase() === 'zoom');
+                if (zoom) {
+                    scene.camera.zoom = +zoom.__value;
+                }
             }
         }
 
@@ -426,6 +438,18 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
                 }
             }
             scene.camera.strategy.limitCameraBounds(bounds);
+        }
+
+        if (this.useMapBackgroundColor) {
+            for (let [id, level] of this.levels.entries()) {
+                if (options?.levelFilter?.length) {
+                    if (!options.levelFilter.includes(level.ldtkLevel.identifier)) {
+                        continue;
+                    }
+                }
+                scene.backgroundColor = level.backgroundColor;
+                break;
+            }
         }
 
 

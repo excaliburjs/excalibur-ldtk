@@ -206,7 +206,72 @@
 			"seed": 5944110,
 			"overrideTilesetUid": null,
 			"gridTiles": [],
-			"entityInstances": []
+			"entityInstances": [
+				{
+					"__identifier": "Potion",
+					"__grid": [4,10],
+					"__pivot": [0,0],
+					"__tags": [],
+					"__tile": { "tilesetUid": 1, "x": 112, "y": 128, "w": 16, "h": 16 },
+					"__smartColor": "#D77643",
+					"iid": "7a775d10-b0a0-11ee-83ad-695661b79578",
+					"width": 16,
+					"height": 16,
+					"defUid": 6,
+					"px": [64,160],
+					"fieldInstances": [],
+					"__worldX": 320,
+					"__worldY": 160
+				},
+				{
+					"__identifier": "Potion",
+					"__grid": [6,6],
+					"__pivot": [0,0],
+					"__tags": [],
+					"__tile": { "tilesetUid": 1, "x": 112, "y": 128, "w": 16, "h": 16 },
+					"__smartColor": "#D77643",
+					"iid": "7b21cde0-b0a0-11ee-83ad-e9253139d30b",
+					"width": 16,
+					"height": 16,
+					"defUid": 6,
+					"px": [96,96],
+					"fieldInstances": [],
+					"__worldX": 352,
+					"__worldY": 96
+				},
+				{
+					"__identifier": "Potion",
+					"__grid": [9,13],
+					"__pivot": [0,0],
+					"__tags": [],
+					"__tile": { "tilesetUid": 1, "x": 112, "y": 128, "w": 16, "h": 16 },
+					"__smartColor": "#D77643",
+					"iid": "7b9d6680-b0a0-11ee-83ad-df3978610342",
+					"width": 16,
+					"height": 16,
+					"defUid": 6,
+					"px": [144,208],
+					"fieldInstances": [],
+					"__worldX": 400,
+					"__worldY": 208
+				},
+				{
+					"__identifier": "Potion",
+					"__grid": [13,7],
+					"__pivot": [0,0],
+					"__tags": [],
+					"__tile": { "tilesetUid": 1, "x": 112, "y": 128, "w": 16, "h": 16 },
+					"__smartColor": "#D77643",
+					"iid": "7c364b20-b0a0-11ee-83ad-c792b327cf7c",
+					"width": 16,
+					"height": 16,
+					"defUid": 6,
+					"px": [208,112],
+					"fieldInstances": [],
+					"__worldX": 464,
+					"__worldY": 112
+				}
+			]
 		},
 		{
 			"__identifier": "Background",

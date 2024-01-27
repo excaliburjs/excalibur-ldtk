@@ -1,4 +1,4 @@
-import { TileMap, vec } from "excalibur";
+import { TileMap, Vector, vec } from "excalibur";
 import { LdtkResource } from "./ldtk-resource";
 import { LdtkLayerInstance } from "./types";
 import { Level } from "./level";
@@ -6,14 +6,16 @@ import { Level } from "./level";
 
 export class TileLayer {
     public ldtkLayer: LdtkLayerInstance;
+    public worldPos: Vector;
+    public offset: Vector;
     public tilemap: TileMap;
     constructor(level: Level, ldtkLayer: LdtkLayerInstance, resource: LdtkResource, public readonly order: number) {
-        const worldPos = vec(level.ldtkLevel.worldX, level.ldtkLevel.worldY);
-        const offset = vec(ldtkLayer.__pxTotalOffsetX, ldtkLayer.__pxTotalOffsetY).add(worldPos);
+        this.worldPos = vec(level.ldtkLevel.worldX, level.ldtkLevel.worldY);
+        this.offset = vec(ldtkLayer.__pxTotalOffsetX, ldtkLayer.__pxTotalOffsetY);
         this.ldtkLayer = ldtkLayer;
         this.tilemap = new TileMap({
             name: ldtkLayer.__identifier,
-            pos: offset,
+            pos: this.worldPos.add(this.offset),
             tileWidth: ldtkLayer.__gridSize,
             tileHeight: ldtkLayer.__gridSize,
             rows: ldtkLayer.__cHei,

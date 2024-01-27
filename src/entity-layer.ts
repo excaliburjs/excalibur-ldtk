@@ -1,15 +1,17 @@
-import { Actor, Entity, vec } from "excalibur";
+import { Actor, Entity, Vector, vec } from "excalibur";
 import { LdtkResource } from "./ldtk-resource";
 import { LdtkEntityInstance, LdtkLayerInstance } from "./types";
 import { Level } from "./level";
 
 export class EntityLayer {
+    public worldPos: Vector;
+    public offset: Vector;
     public entities: Entity[] = [];
     public ldtkToEntity = new Map<LdtkEntityInstance, Entity>();
     public entityToLdtk = new Map<Entity, LdtkEntityInstance>();
     constructor(level: Level, public readonly ldtkLayer: LdtkLayerInstance, private resource: LdtkResource, public readonly order: number) {
-        const worldPos = vec(level.ldtkLevel.worldX, level.ldtkLevel.worldY);
-        const offset = vec(ldtkLayer.__pxTotalOffsetX, ldtkLayer.__pxTotalOffsetY).add(worldPos);
+        this.worldPos = vec(level.ldtkLevel.worldX, level.ldtkLevel.worldY);
+        this.offset = vec(ldtkLayer.__pxTotalOffsetX, ldtkLayer.__pxTotalOffsetY);
         if (ldtkLayer.entityInstances) {
             for (let entity of ldtkLayer.entityInstances) {
                 const entityMetadata = resource.projectMetadata.defs.entities.find(e => {
@@ -20,7 +22,7 @@ export class EntityLayer {
                     if (factory) {
                         const newEntity = factory({
                             type: entity.__identifier,
-                            worldPos: vec(entity.px[0], entity.px[1]).add(offset),
+                            worldPos: vec(entity.px[0], entity.px[1]).add(this.worldPos.add(this.offset)),
                             entity,
                             definition: entityMetadata,
                             layer: this,
@@ -34,7 +36,7 @@ export class EntityLayer {
                 } else {
                     const actor = new Actor({
                         name: entity.__identifier,
-                        pos: vec(entity.px[0], entity.px[1]),
+                        pos: vec(entity.px[0], entity.px[1]).add(this.worldPos.add(this.offset)),
                         width: entity.width,
                         height: entity.height,
                         anchor: vec(entityMetadata?.pivotX ?? 0, entityMetadata?.pivotY ?? 0),
@@ -70,7 +72,7 @@ export class EntityLayer {
                     if (factory) {
                         const newEntity = factory({
                             type: entity.__identifier,
-                            worldPos: vec(entity.px[0], entity.px[1]),
+                            worldPos: vec(entity.px[0], entity.px[1]).add(this.worldPos.add(this.offset)),
                             entity,
                             definition: entityMetadata,
                             layer: this,
