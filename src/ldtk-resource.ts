@@ -221,7 +221,9 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
                 });
                 this.tilesets.set(tileset.uid, friendlyTileset);
             } else {
-                console.warn(`No tileset image provided for ${tileset.identifier}`);
+                if (tileset.identifier !== 'Internal_Icons') {
+                    console.warn(`No tileset image provided for ${tileset.identifier}`);
+                }
             }
         }
 
