@@ -153,7 +153,7 @@
 					"__identifier": "Potion",
 					"__grid": [13,8],
 					"__pivot": [0,0],
-					"__tags": [],
+					"__tags": ["item"],
 					"__tile": { "tilesetUid": 1, "x": 112, "y": 128, "w": 16, "h": 16 },
 					"__smartColor": "#D77643",
 					"iid": "5efeae70-6280-11ee-bc44-77d1860dfd25",
@@ -169,7 +169,7 @@
 					"__identifier": "Spell_Book",
 					"__grid": [12,11],
 					"__pivot": [0,0],
-					"__tags": [],
+					"__tags": ["item"],
 					"__tile": { "tilesetUid": 1, "x": 112, "y": 144, "w": 16, "h": 16 },
 					"__smartColor": "#EAD4AA",
 					"iid": "61f977e0-6280-11ee-bc44-a1335ec20886",
@@ -182,29 +182,10 @@
 					"__worldY": 176
 				},
 				{
-					"__identifier": "PlayerStart",
-					"__grid": [4,9],
-					"__pivot": [0,0],
-					"__tags": [],
-					"__tile": { "tilesetUid": 8, "x": 0, "y": 0, "w": 16, "h": 16 },
-					"__smartColor": "#BE2F2F",
-					"iid": "638cc210-6280-11ee-bc44-cb342b86cd82",
-					"width": 16,
-					"height": 16,
-					"defUid": 5,
-					"px": [64,144],
-					"fieldInstances": [
-						{ "__identifier": "Health", "__type": "Float", "__value": 100, "__tile": null, "defUid": 13, "realEditorValues": [] },
-						{ "__identifier": "Attack", "__type": "Float", "__value": 25, "__tile": null, "defUid": 14, "realEditorValues": [] }
-					],
-					"__worldX": 64,
-					"__worldY": 144
-				},
-				{
 					"__identifier": "Sword",
 					"__grid": [11,8],
 					"__pivot": [0,0],
-					"__tags": [],
+					"__tags": ["item"],
 					"__tile": { "tilesetUid": 1, "x": 128, "y": 144, "w": 16, "h": 16 },
 					"__smartColor": "#E4A672",
 					"iid": "9e10ab90-6280-11ee-bc44-a5424234ea8a",
@@ -223,20 +204,36 @@
 					"__tags": [],
 					"__tile": null,
 					"__smartColor": "#FF0044",
-					"iid": "92de9740-b0a0-11ee-83ad-49d65ebdbe80",
+					"iid": "37c24ba0-b0a0-11ee-a66b-397e71291a77",
 					"width": 16,
 					"height": 16,
 					"defUid": 15,
 					"px": [104,136],
 					"fieldInstances": [
-						{ "__identifier": "camera", "__type": "Bool", "__value": true, "__tile": null, "defUid": 16, "realEditorValues": [{
-							"id": "V_Bool",
-							"params": [ true ]
-						}] },
+						{ "__identifier": "camera", "__type": "Bool", "__value": true, "__tile": null, "defUid": 16, "realEditorValues": [] },
 						{ "__identifier": "zoom", "__type": "Float", "__value": 2, "__tile": null, "defUid": 18, "realEditorValues": [] }
 					],
 					"__worldX": 104,
 					"__worldY": 136
+				},
+				{
+					"__identifier": "PlayerStart",
+					"__grid": [4,9],
+					"__pivot": [0,0],
+					"__tags": ["actor"],
+					"__tile": { "tilesetUid": 8, "x": 0, "y": 0, "w": 16, "h": 16 },
+					"__smartColor": "#BE2F2F",
+					"iid": "3425daa0-b0a0-11ee-a66b-3774209d1c62",
+					"width": 16,
+					"height": 16,
+					"defUid": 5,
+					"px": [64,144],
+					"fieldInstances": [
+						{ "__identifier": "Health", "__type": "Float", "__value": 100, "__tile": null, "defUid": 13, "realEditorValues": [] },
+						{ "__identifier": "Attack", "__type": "Float", "__value": 25, "__tile": null, "defUid": 14, "realEditorValues": [] }
+					],
+					"__worldX": 64,
+					"__worldY": 144
 				}
 			]
 		},

@@ -63,6 +63,51 @@
 				"color": 14120515,
 				"customFields" : {}
 			}
+		],
+		"Enemy": [
+			{
+				"id": "Enemy",
+				"iid": "68554530-b0a0-11ee-a66b-0f0d1475949d",
+				"layer": "Objects",
+				"x": 96,
+				"y": 176,
+				"width": 16,
+				"height": 16,
+				"color": 7552569,
+				"customFields": {
+					"Patrol": [
+						{
+							"cx": 8,
+							"cy": 11
+						},
+						{
+							"cx": 10,
+							"cy": 11
+						},
+						{
+							"cx": 10,
+							"cy": 13
+						},
+						{
+							"cx": 6,
+							"cy": 13
+						},
+						{
+							"cx": 4,
+							"cy": 13
+						},
+						{
+							"cx": 4,
+							"cy": 11
+						},
+						{
+							"cx": 5,
+							"cy": 11
+						}
+					],
+					"type": "Skeleton"
+				}
+			}
 		]
 	}
 }

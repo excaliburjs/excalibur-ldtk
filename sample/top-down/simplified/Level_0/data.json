@@ -44,22 +44,6 @@
 				"customFields" : {}
 			}
 		],
-		"PlayerStart": [
-			{
-				"id": "PlayerStart",
-				"iid": "638cc210-6280-11ee-bc44-cb342b86cd82",
-				"layer": "Objects",
-				"x": 64,
-				"y": 144,
-				"width": 16,
-				"height": 16,
-				"color": 12463919,
-				"customFields": {
-					"Health": 100,
-					"Attack": 25
-				}
-			}
-		],
 		"Sword": [
 			{
 				"id": "Sword",
@@ -78,7 +62,7 @@
 		"Camera": [
 			{
 				"id": "Camera",
-				"iid": "92de9740-b0a0-11ee-83ad-49d65ebdbe80",
+				"iid": "37c24ba0-b0a0-11ee-a66b-397e71291a77",
 				"layer": "Objects",
 				"x": 104,
 				"y": 136,
@@ -88,6 +72,22 @@
 				"customFields": {
 					"camera": true,
 					"zoom": 2
+				}
+			}
+		],
+		"PlayerStart": [
+			{
+				"id": "PlayerStart",
+				"iid": "3425daa0-b0a0-11ee-a66b-3774209d1c62",
+				"layer": "Objects",
+				"x": 64,
+				"y": 144,
+				"width": 16,
+				"height": 16,
+				"color": 12463919,
+				"customFields": {
+					"Health": 100,
+					"Attack": 25
 				}
 			}
 		]

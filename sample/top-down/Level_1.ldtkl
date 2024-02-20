@@ -211,7 +211,7 @@
 					"__identifier": "Potion",
 					"__grid": [4,10],
 					"__pivot": [0,0],
-					"__tags": [],
+					"__tags": ["item"],
 					"__tile": { "tilesetUid": 1, "x": 112, "y": 128, "w": 16, "h": 16 },
 					"__smartColor": "#D77643",
 					"iid": "7a775d10-b0a0-11ee-83ad-695661b79578",
@@ -227,7 +227,7 @@
 					"__identifier": "Potion",
 					"__grid": [6,6],
 					"__pivot": [0,0],
-					"__tags": [],
+					"__tags": ["item"],
 					"__tile": { "tilesetUid": 1, "x": 112, "y": 128, "w": 16, "h": 16 },
 					"__smartColor": "#D77643",
 					"iid": "7b21cde0-b0a0-11ee-83ad-e9253139d30b",
@@ -243,7 +243,7 @@
 					"__identifier": "Potion",
 					"__grid": [9,13],
 					"__pivot": [0,0],
-					"__tags": [],
+					"__tags": ["item"],
 					"__tile": { "tilesetUid": 1, "x": 112, "y": 128, "w": 16, "h": 16 },
 					"__smartColor": "#D77643",
 					"iid": "7b9d6680-b0a0-11ee-83ad-df3978610342",
@@ -259,7 +259,7 @@
 					"__identifier": "Potion",
 					"__grid": [13,7],
 					"__pivot": [0,0],
-					"__tags": [],
+					"__tags": ["item"],
 					"__tile": { "tilesetUid": 1, "x": 112, "y": 128, "w": 16, "h": 16 },
 					"__smartColor": "#D77643",
 					"iid": "7c364b20-b0a0-11ee-83ad-c792b327cf7c",
@@ -270,6 +270,62 @@
 					"fieldInstances": [],
 					"__worldX": 464,
 					"__worldY": 112
+				},
+				{
+					"__identifier": "Enemy",
+					"__grid": [6,11],
+					"__pivot": [0,0],
+					"__tags": [],
+					"__tile": { "tilesetUid": 1, "x": 320, "y": 128, "w": 16, "h": 16 },
+					"__smartColor": "#733E39",
+					"iid": "68554530-b0a0-11ee-a66b-0f0d1475949d",
+					"width": 16,
+					"height": 16,
+					"defUid": 20,
+					"px": [96,176],
+					"fieldInstances": [
+						{ "__identifier": "Patrol", "__type": "Array<Point>", "__value": [
+							{ "cx": 8, "cy": 11 },
+							{ "cx": 10, "cy": 11 },
+							{ "cx": 10, "cy": 13 },
+							{ "cx": 6, "cy": 13 },
+							{ "cx": 4, "cy": 13 },
+							{ "cx": 4, "cy": 11 },
+							{ "cx": 5, "cy": 11 }
+						], "__tile": null, "defUid": 22, "realEditorValues": [
+							{
+								"id": "V_String",
+								"params": ["8,11"]
+							},
+							{
+								"id": "V_String",
+								"params": ["10,11"]
+							},
+							{
+								"id": "V_String",
+								"params": ["10,13"]
+							},
+							{
+								"id": "V_String",
+								"params": ["6,13"]
+							},
+							{
+								"id": "V_String",
+								"params": ["4,13"]
+							},
+							{
+								"id": "V_String",
+								"params": ["4,11"]
+							},
+							{
+								"id": "V_String",
+								"params": ["5,11"]
+							}
+						] },
+						{ "__identifier": "type", "__type": "LocalEnum.Enemy_Types", "__value": "Skeleton", "__tile": null, "defUid": 24, "realEditorValues": [] }
+					],
+					"__worldX": 352,
+					"__worldY": 176
 				}
 			]
 		},

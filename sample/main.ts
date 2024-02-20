@@ -8,12 +8,10 @@ const game = new ex.Engine({
         width: 256,
         height: 256,
     },
-    viewport: {
-        width: 800,
-        height: 800
-    },
     suppressPlayButton: true,
-    antialiasing: false
+    pixelArt: true,
+    pixelRatio: 3,
+    displayMode: ex.DisplayMode.FitScreen,
 });
 
 game.start(loader).then(() => {
