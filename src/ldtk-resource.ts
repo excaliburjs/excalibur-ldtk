@@ -424,8 +424,14 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
         }
 
         if (this.useTilemapCameraStrategy) {
+            let levels: Level[] = Array.from(this.levels.values());
             let bounds = new BoundingBox();
-            for (const level of this.levels.values()) {
+            for (const level of levels) {
+                if (options?.levelFilter?.length) {
+                    if (!options.levelFilter.includes(level.ldtkLevel.identifier)) {
+                        continue;
+                    }
+                }
                 const firstTileLayer = this.getTileLayers(level.ldtkLevel.identifier)[0];
                 if (firstTileLayer) {
                     bounds = bounds.combine(

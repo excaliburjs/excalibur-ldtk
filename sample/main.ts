@@ -33,6 +33,6 @@ game.start(loader).then(() => {
     // Player.ts
     Resources.LdtkResource.addToScene(game.currentScene, {
         pos: ex.vec(0, 0),
-        // levelFilter: ['Level_0']
+        levelFilter: ['Level_0', 'Level_1']
     });
 });
