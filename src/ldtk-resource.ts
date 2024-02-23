@@ -428,23 +428,26 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
      */
     getLevelBounds(levels?: string[]): BoundingBox {
         levels = levels ?? Array.from(this.levelsByName.keys());
-        let bounds = new BoundingBox();
+        let bounds: BoundingBox | null = null;
         for (const level of this.levels.values()) {
             if (!levels.includes(level.ldtkLevel.identifier)) {
                 continue;
             }
             const firstTileLayer = this.getTileLayers(level.ldtkLevel.identifier)[0];
             if (firstTileLayer) {
-                bounds = bounds.combine(
-                    BoundingBox.fromDimension(
-                        firstTileLayer.tilemap.tileWidth * firstTileLayer.tilemap.columns,
-                        firstTileLayer.tilemap.tileHeight * firstTileLayer.tilemap.rows,
-                        Vector.Zero,
-                        firstTileLayer.tilemap.pos)
-                );
+                const tileBounds = BoundingBox.fromDimension(
+                    firstTileLayer.tilemap.tileWidth * firstTileLayer.tilemap.columns,
+                    firstTileLayer.tilemap.tileHeight * firstTileLayer.tilemap.rows,
+                    Vector.Zero,
+                    firstTileLayer.tilemap.pos);
+                if (!bounds) {
+                    bounds = tileBounds;
+                } else {
+                    bounds = bounds.combine(tileBounds);
+                }
             }
         }
-        return bounds;
+        return bounds ?? new BoundingBox();
     }
 
     addToScene(scene: Scene, options?: AddToSceneOptions) {
