@@ -244,14 +244,14 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
                 // embedded levels
                 const friendlyLevel = new Level(level, this);
                 this.levels.set(level.uid, friendlyLevel);
-                this.levelsByName.set(level.identifier, friendlyLevel);
+                this.levelsByName.set(level.identifier.toLowerCase(), friendlyLevel);
             }
         }
 
         await Promise.all([this._imageLoader.load(), this._levelLoader.load()]);
         this._levelLoader.values().forEach(level => {
             this.levels.set(level.data.ldtkLevel.uid, level.data);
-            this.levelsByName.set(level.data.ldtkLevel.identifier, level.data);
+            this.levelsByName.set(level.data.ldtkLevel.identifier.toLowerCase(), level.data);
         });
 
         return this.data = this.projectMetadata;
@@ -276,17 +276,17 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
      * @returns 
      */
     getLevel(identifier: string): Level | undefined {
-        return this.levelsByName.get(identifier);
+        return this.levelsByName.get(identifier.toLowerCase());
     }
 
     /**
      * Get the entity layers, optionally provide a level identifier to filter to
-     * @param identifier 
+     * @param levelIdentifier 
      */
-    getEntityLayers(identifier?: string): EntityLayer[] {
+    getEntityLayers(levelIdentifier?: string): EntityLayer[] {
         let results: EntityLayer[] = [];
-        if (identifier) {
-            const level = this.getLevel(identifier);
+        if (levelIdentifier) {
+            const level = this.getLevel(levelIdentifier);
             if (level) {
                 for (let layer of level.layers) {
                     if (layer instanceof EntityLayer) {
@@ -358,27 +358,93 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
      * @param identifier 
      * @returns 
      */
-    getLdtkEntitiesByIdentifier(identifier: string): LdtkEntityInstance[] {
+    getLdtkEntitiesByIdentifier(identifier: string, levels?: string[]): LdtkEntityInstance[] {
         let results: LdtkEntityInstance[] = [];
-        const layers = this.getEntityLayers();
-        for (let layer of layers) {
-            results = results.concat(layer.getLdtkEntitiesByIdentifier(identifier));
+        const levelsToSearch = levels ?? Array.from(this.levels.values()).map(l => l.ldtkLevel.identifier);
+        for (const level of levelsToSearch) {
+            const layers = this.getEntityLayers(level);
+            for (let layer of layers) {
+                results = results.concat(layer.getLdtkEntitiesByIdentifier(identifier));
+            }
         }
         return results;
     }
 
     /**
-     * Search layer for entities that match a field and optionally a value (both case insensitive)
+     * Search levels for ldtk entities that match a field and optionally a value (both case insensitive)
      * @param fieldIdentifier 
      * @param value
      */
-    getLdtkEntitiesByField(fieldIdentifier: string, value?: any): LdtkEntityInstance[] {
+    getLdtkEntitiesByField(fieldIdentifier: string, value?: any, levels?: string[]): LdtkEntityInstance[] {
         let results: LdtkEntityInstance[] = [];
-        const layers = this.getEntityLayers();
-        for (let layer of layers) {
-            results = results.concat(layer.getLdtkEntitiesByField(fieldIdentifier, value));
+        const levelsToSearch = levels ?? Array.from(this.levels.values()).map(l => l.ldtkLevel.identifier);
+        for (const level of levelsToSearch) {
+            const layers = this.getEntityLayers(level);
+            for (let layer of layers) {
+                results = results.concat(layer.getLdtkEntitiesByField(fieldIdentifier, value));
+            }
         }
         return results;
+    }
+
+    /**
+     * Search levels for excalibur entities that match an identifier (case insensitive)
+     * @param identifier
+     * @param levels
+     */
+    getEntitiesByIdentifier(identifier: string, levels?: string[]): Entity<any>[] {
+        let results: Entity<any>[] = [];
+        const levelsToSearch = levels ?? Array.from(this.levels.values()).map(l => l.ldtkLevel.identifier);
+        for (const level of levelsToSearch) {
+            const layers = this.getEntityLayers(level);
+            for (let layer of layers) {
+                results = results.concat(layer.getEntitiesByIdentifier(identifier));
+            }
+        }
+        return results;
+    }
+
+    /**
+     * Search levels for excalibur entities that match a field and optionally a value (both case insensitive)
+     * @param fieldIdentifier
+     * @param value
+     * @param levels
+     */
+    getEntitiesByField(fieldIdentifier: string, value?: any, levels?: string[]): Entity<any>[] {
+        let results: Entity<any>[] = [];
+        const levelsToSearch = levels ?? Array.from(this.levels.values()).map(l => l.ldtkLevel.identifier);
+        for (const level of levelsToSearch) {
+            const layers = this.getEntityLayers(level);
+            for (let layer of layers) {
+                results = results.concat(layer.getEntitiesByField(fieldIdentifier, value));
+            }
+        }
+        return results;
+    }
+
+    /**
+     * Get the level bounds given a list of level identifiers (case insensitive)
+     * @param levels
+     */
+    getLevelBounds(levels?: string[]): BoundingBox {
+        levels = levels ?? Array.from(this.levelsByName.keys());
+        let bounds = new BoundingBox();
+        for (const level of this.levels.values()) {
+            if (!levels.includes(level.ldtkLevel.identifier)) {
+                continue;
+            }
+            const firstTileLayer = this.getTileLayers(level.ldtkLevel.identifier)[0];
+            if (firstTileLayer) {
+                bounds = bounds.combine(
+                    BoundingBox.fromDimension(
+                        firstTileLayer.tilemap.tileWidth * firstTileLayer.tilemap.columns,
+                        firstTileLayer.tilemap.tileHeight * firstTileLayer.tilemap.rows,
+                        Vector.Zero,
+                        firstTileLayer.tilemap.pos)
+                );
+            }
+        }
+        return bounds;
     }
 
     addToScene(scene: Scene, options?: AddToSceneOptions) {
@@ -424,25 +490,7 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
         }
 
         if (this.useTilemapCameraStrategy) {
-            let levels: Level[] = Array.from(this.levels.values());
-            let bounds = new BoundingBox();
-            for (const level of levels) {
-                if (options?.levelFilter?.length) {
-                    if (!options.levelFilter.includes(level.ldtkLevel.identifier)) {
-                        continue;
-                    }
-                }
-                const firstTileLayer = this.getTileLayers(level.ldtkLevel.identifier)[0];
-                if (firstTileLayer) {
-                    bounds = bounds.combine(
-                        BoundingBox.fromDimension(
-                            firstTileLayer.tilemap.tileWidth * firstTileLayer.tilemap.columns,
-                            firstTileLayer.tilemap.tileHeight * firstTileLayer.tilemap.rows,
-                            Vector.Zero,
-                            firstTileLayer.tilemap.pos)
-                    );
-                }
-            }
+            let bounds = this.getLevelBounds(options?.levelFilter);
             scene.camera.strategy.limitCameraBounds(bounds);
         }
 

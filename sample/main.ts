@@ -26,7 +26,6 @@ game.start(loader).then(() => {
             pos: props.worldPos,
             z: props.layer.order
         });
-        game.currentScene.camera.strategy.lockToActor(player);
         return player;
     });
     // Provide a type to the plugin to use for a specific entity identifier
@@ -35,4 +34,11 @@ game.start(loader).then(() => {
         pos: ex.vec(0, 0),
         levelFilter: ['Level_0', 'Level_1']
     });
+    const player = game.currentScene.world.entityManager.getByName('player')[0];
+    if (player instanceof Player) {
+        game.currentScene.camera.clearAllStrategies();
+        game.currentScene.camera.strategy.lockToActor(player);
+        const bounds = Resources.LdtkResource.getLevelBounds(['Level_0', 'Level_1']);
+        game.currentScene.camera.strategy.limitCameraBounds(bounds);
+    }
 });
