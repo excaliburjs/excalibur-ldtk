@@ -2,6 +2,7 @@ import { TileMap, Vector, vec } from "excalibur";
 import { LdtkResource } from "./ldtk-resource";
 import { LdtkLayerInstance } from "./types";
 import { Level } from "./level";
+import { Tileset } from "./tileset";
 
 
 export class TileLayer {
@@ -9,6 +10,8 @@ export class TileLayer {
     public worldPos: Vector;
     public offset: Vector;
     public tilemap: TileMap;
+    public tileset?: Tileset;
+
     constructor(level: Level, ldtkLayer: LdtkLayerInstance, resource: LdtkResource, public readonly order: number) {
         this.worldPos = vec(level.ldtkLevel.worldX, level.ldtkLevel.worldY);
         this.offset = vec(ldtkLayer.__pxTotalOffsetX, ldtkLayer.__pxTotalOffsetY);
@@ -23,25 +26,26 @@ export class TileLayer {
         });
         this.tilemap.z = order;
 
-        for (let tile of ldtkLayer.gridTiles) {
-            const xCoord = Math.floor(tile.px[0] / ldtkLayer.__gridSize);
-            const yCoord = Math.floor(tile.px[1] / ldtkLayer.__gridSize);
-            const exTile = this.tilemap.getTile(xCoord, yCoord);
-            if (ldtkLayer.__tilesetDefUid) {
-                const ts = resource.tilesets.get(ldtkLayer.__tilesetDefUid);
-                if (ts) {
-                    const tsxCoord = Math.floor(tile.src[0] / ts.ldtkTileset.tileGridSize);
-                    const tsyCoord = Math.floor(tile.src[1] / ts.ldtkTileset.tileGridSize);
-                    const sprite = ts.spritesheet.getSprite(tsxCoord, tsyCoord);
+        if (ldtkLayer.__tilesetDefUid) {
+            this.tileset = resource.tilesets.get(ldtkLayer.__tilesetDefUid);
+            for (let tile of ldtkLayer.gridTiles) {
+                const xCoord = Math.floor(tile.px[0] / ldtkLayer.__gridSize);
+                const yCoord = Math.floor(tile.px[1] / ldtkLayer.__gridSize);
+                const exTile = this.tilemap.getTile(xCoord, yCoord);
+                if (this.tileset) {                                
+                    const tsxCoord = Math.floor(tile.src[0] / this.tileset.ldtkTileset.tileGridSize);
+                    const tsyCoord = Math.floor(tile.src[1] / this.tileset.ldtkTileset.tileGridSize);
+                    const sprite = this.tileset.spritesheet.getSprite(tsxCoord, tsyCoord);
                     if (sprite) {
                         exTile.addGraphic(sprite);
                     } else {
                         console.error('Could not find sprite in LDtk spritesheet at', tsxCoord, tsyCoord);
-                    }
+                    }                
                 }
-            } else {
-                console.error('Could not tileset in LDtk', ldtkLayer.__tilesetDefUid, ldtkLayer.__tilesetRelPath);
-            }
+            }            
+        } else {
+            console.error('Could not tileset in LDtk', ldtkLayer.__tilesetDefUid, ldtkLayer.__tilesetRelPath);
         }
+
     }
 }
