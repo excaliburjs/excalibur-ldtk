@@ -131,7 +131,7 @@ const LdtkTilesetDefinition = z.object({
         tileId: z.number()
     })),
     embedAtlas: z.string().nullable(),
-    enumsTags: z.optional(z.array(z.object({
+    enumTags: z.optional(z.array(z.object({
         enumValueId: z.string(),
         tileIds: z.array(z.number())
     }))),
