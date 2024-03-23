@@ -81,6 +81,17 @@ export class EntityLayer {
             });
 
             if (newEntity) {
+                // remove pre-existing entity (e.g. the default actor created for the entity placement)
+                const preExisting = this.ldtkToEntity.get(entity);
+                if (preExisting) {
+                    const index = this.entities.indexOf(preExisting);
+                    if (index > -1) {
+                        this.entities.splice(index, 1);
+                        this.ldtkToEntity.delete(entity);
+                        this.entityToLdtk.delete(preExisting);
+                    }
+                }
+        
                 this.entities.push(newEntity);
                 this.ldtkToEntity.set(entity, newEntity);
                 this.entityToLdtk.set(newEntity, entity);
