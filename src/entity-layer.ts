@@ -17,6 +17,7 @@ export class EntityLayer {
                 const entityMetadata = resource.projectMetadata.defs.entities.find(e => {
                     return e.identifier === entity.__identifier
                 });
+                
                 if (resource.factories.has(entity.__identifier)) {
                     const factory = resource.factories.get(entity.__identifier);
                     if (factory) {
@@ -61,44 +62,32 @@ export class EntityLayer {
         }
     }
 
-    runFactory(ldtkEntityIdentifier: string): Entity | undefined {
-        if (this.resource.factories.has(ldtkEntityIdentifier)) {
-            if (this.ldtkLayer.entityInstances) {
-                for (let entity of this.ldtkLayer.entityInstances) {
-                    const entityMetadata = this.resource.projectMetadata.defs.entities.find(e => {
-                        return e.identifier === entity.__identifier
-                    });
-                    const factory = this.resource.factories.get(entity.__identifier);
-                    if (factory) {
-                        const newEntity = factory({
-                            type: entity.__identifier,
-                            worldPos: vec(entity.px[0], entity.px[1]).add(this.worldPos.add(this.offset)),
-                            entity,
-                            definition: entityMetadata,
-                            layer: this,
-                        });
-                        if (newEntity) {
-                            // remove any pre done entities if a factor covered it
-                            const preExisting = this.ldtkToEntity.get(entity);
-                            if (preExisting) {
-                                const index = this.entities.indexOf(preExisting);
-                                if (index > -1) {
-                                    this.entities.splice(index, 1);
-                                    this.ldtkToEntity.delete(entity);
-                                    this.entityToLdtk.delete(preExisting);
-                                }
-                            }
+    runFactories() {
+        for (let entity of this.ldtkLayer.entityInstances) {
+            const factory = this.resource.factories.get(entity.__identifier);
+            
+            if (!factory) { continue }
 
-                            this.entities.push(newEntity);
-                            this.ldtkToEntity.set(entity, newEntity);
-                            this.entityToLdtk.set(newEntity, entity);
-                            return newEntity;
-                        }
-                    }
-                }
+            const entityMetadata = this.resource.projectMetadata.defs.entities.find(e => {
+                return e.identifier === entity.__identifier
+            });
+
+            const newEntity = factory({
+                type: entity.__identifier,
+                worldPos: vec(entity.px[0], entity.px[1]).add(this.worldPos.add(this.offset)),
+                entity,
+                definition: entityMetadata,
+                layer: this,
+            });
+
+            if (newEntity) {
+                this.entities.push(newEntity);
+                this.ldtkToEntity.set(entity, newEntity);
+                this.entityToLdtk.set(newEntity, entity);
             }
         }
     }
+
 
     getEntitiesByIdentifier(identifier: string): Entity[] {
         const ldtkEntities = this.getLdtkEntitiesByIdentifier(identifier);

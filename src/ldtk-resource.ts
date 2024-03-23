@@ -263,10 +263,11 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
 
     registerEntityIdentifierFactory(ldtkEntityIdentifier: string, factory: (props: FactoryProps) => Entity | undefined): void {
         this.factories.set(ldtkEntityIdentifier, factory);
-        if (this.isLoaded()) {
-            for (let entityLayer of this.getEntityLayers()) {
-                entityLayer.runFactory(ldtkEntityIdentifier);
-            }
+    }
+
+    registerEntityIdentifierFactories(factories: Record<string, (props: FactoryProps) => Entity | undefined>): void {
+        for (const key in factories) {
+            this.registerEntityIdentifierFactory(key, factories[key]);
         }
     }
 
@@ -453,6 +454,7 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
     addToScene(scene: Scene, options?: AddToSceneOptions) {
         const { pos, useLevelOffsets } = {pos: vec(0, 0), useLevelOffsets: true, ...options};
 
+        
         for (let [id, level] of this.levels.entries()) {
             if (options?.levelFilter?.length) {
                 if (!options.levelFilter.includes(level.ldtkLevel.identifier)) {
@@ -467,6 +469,7 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
                     }
                     scene.add(layer.tilemap)
                 } else {
+                    layer.runFactories()
                     for (let entity of layer.entities) {
                         const tx = entity.get(TransformComponent);
                         if (tx) {
