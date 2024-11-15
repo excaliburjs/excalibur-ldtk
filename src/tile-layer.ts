@@ -32,9 +32,9 @@ export class TileLayer {
                 const xCoord = Math.floor(tile.px[0] / ldtkLayer.__gridSize);
                 const yCoord = Math.floor(tile.px[1] / ldtkLayer.__gridSize);
                 const exTile = this.tilemap.getTile(xCoord, yCoord);
-                if (this.tileset) {                                
-                    const tsxCoord = Math.floor(tile.src[0] / this.tileset.ldtkTileset.tileGridSize);
-                    const tsyCoord = Math.floor(tile.src[1] / this.tileset.ldtkTileset.tileGridSize);
+                if (this.tileset) {
+                    const tsxCoord = Math.floor((tile.src[0] - (this.tileset.ldtkTileset.padding ?? 0)) / (this.tileset.ldtkTileset.tileGridSize + (this.tileset.ldtkTileset.spacing ?? 0)));
+                    const tsyCoord = Math.floor((tile.src[1] - (this.tileset.ldtkTileset.padding ?? 0)) / (this.tileset.ldtkTileset.tileGridSize + (this.tileset.ldtkTileset.spacing ?? 0)));
                     const sprite = this.tileset.spritesheet.getSprite(tsxCoord, tsyCoord);
                     if (sprite) {
                         exTile.addGraphic(sprite);

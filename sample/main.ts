@@ -10,12 +10,15 @@ const game = new ex.Engine({
     },
     suppressPlayButton: true,
     pixelArt: true,
-    pixelRatio: 3,
+    pixelRatio: 4,
     displayMode: ex.DisplayMode.FitScreen,
 });
 
 game.start(loader).then(() => {
     console.log('Game start!');
+
+    game.screen.pixelRatioOverride = 4;
+    game.screen.applyResolutionAndViewport();
 
     Resources.LdtkResource.registerEntityIdentifierFactory('PlayerStart', (props) => {
         const player = new Player({
