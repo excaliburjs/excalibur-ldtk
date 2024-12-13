@@ -37,7 +37,7 @@ export class TileLayer {
                     const tsyCoord = Math.floor((tile.src[1] - (this.tileset.ldtkTileset.padding ?? 0)) / (this.tileset.ldtkTileset.tileGridSize + (this.tileset.ldtkTileset.spacing ?? 0)));
                     const sprite = this.tileset.spritesheet.getSprite(tsxCoord, tsyCoord);
                     if (sprite) {
-                        exTile.addGraphic(sprite);
+                        exTile!.addGraphic(sprite);
                     } else {
                         console.error('Could not find sprite in LDtk spritesheet at', tsxCoord, tsyCoord);
                     }                

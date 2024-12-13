@@ -41,12 +41,12 @@ export class IntGridLayer {
                     const yCoord = Math.floor(i / columns);
                     const tile = this.tilemap.getTile(xCoord, yCoord);
                     if (solidValue && ldtkLayer.intGridCsv[i] === solidValue.value) {
-                        tile.solid = true;
+                        tile!.solid = true;
                     }
 
                     // TODO might be a mistake to treat 1 as solid if there isn't a labelled solid
                     if (!solidValue && ldtkLayer.intGridCsv[i] === 1) {
-                        tile.solid = true;
+                        tile!.solid = true;
                     }
                 }
             }

@@ -3,7 +3,7 @@ import { LdtkResource } from '@excalibur-ldtk';
 
 export const Resources = {
     HeroSpriteSheetPng: new ImageSource('./Solaria Demo Pack Update 03/Solaria Demo Pack Update 03/16x16/Sprites/Hero 01.png'),
-    LdtkResource: new LdtkResource('./top-down.ldtk', {
+    LdtkResource: new LdtkResource('./spacing-padding/spacing-padding.ldtk', {
         useTilemapCameraStrategy: true,
         useMapBackgroundColor: true,
     })
