@@ -1,4 +1,4 @@
-import { TileMap, Vector, vec } from "excalibur";
+import { GraphicsComponent, TileMap, Vector, vec } from "excalibur";
 import { LdtkResource } from "./ldtk-resource";
 import { LdtkLayerInstance } from "./types";
 import { Level } from "./level";
@@ -25,6 +25,9 @@ export class TileLayer {
             columns: ldtkLayer.__cWid,
         });
         this.tilemap.z = order;
+        const graphics = this.tilemap.get(GraphicsComponent);
+        graphics.isVisible = ldtkLayer.visible;
+
 
         if (ldtkLayer.__tilesetDefUid) {
             this.tileset = resource.tilesets.get(ldtkLayer.__tilesetDefUid);
@@ -35,7 +38,17 @@ export class TileLayer {
                 if (this.tileset) {
                     const tsxCoord = Math.floor((tile.src[0] - (this.tileset.ldtkTileset.padding ?? 0)) / (this.tileset.ldtkTileset.tileGridSize + (this.tileset.ldtkTileset.spacing ?? 0)));
                     const tsyCoord = Math.floor((tile.src[1] - (this.tileset.ldtkTileset.padding ?? 0)) / (this.tileset.ldtkTileset.tileGridSize + (this.tileset.ldtkTileset.spacing ?? 0)));
-                    const sprite = this.tileset.spritesheet.getSprite(tsxCoord, tsyCoord);
+                    // Bit 0 toggles x flip
+                    // Bit 1 toggles 1 flip
+                    // Examples: f=0 (no flip), f=1 (X flip only), f=2 (Y flip only), f=3 (both flips)
+                    const flipHorizontal = !!(tile.f & 0b01);
+                    const flipVertical = !!(tile.f & 0b10);
+                    let sprite = this.tileset.spritesheet.getSprite(tsxCoord, tsyCoord);
+                    if (flipHorizontal || flipVertical) {
+                        sprite = sprite.clone();
+                        sprite.flipHorizontal = flipHorizontal;
+                        sprite.flipVertical = flipVertical;
+                    }
                     if (sprite) {
                         exTile!.addGraphic(sprite);
                     } else {

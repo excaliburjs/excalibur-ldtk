@@ -26,7 +26,8 @@ export class Level {
                     this.layers.push(new TileLayer(this, layer, resource, order));
                 }
 
-                if (layer.intGridCsv?.length !== 0) {
+                // Includes standard IntGrid, IntGrid w/ AutoTile & AutoTile layers
+                if (layer.intGridCsv?.length !== 0 || layer.autoLayerTiles?.length !== 0) {
                     this.layers.push(new IntGridLayer(this, layer, resource, order));
                 }
                 order++;

@@ -1,7 +1,8 @@
-import { TileMap, Vector, vec } from "excalibur";
+import { GraphicsComponent, TileMap, Vector, vec } from "excalibur";
 import { LdtkLayerInstance } from "./types";
 import { LdtkResource } from "./ldtk-resource";
 import { Level } from "./level";
+import { Tileset } from "./tileset";
 
 export class IntGridLayer {
 
@@ -9,11 +10,13 @@ export class IntGridLayer {
     public worldPos: Vector;
     public offset: Vector;
     public tilemap!: TileMap;
+    public tileset?: Tileset;
+
     constructor(level: Level, ldtkLayer: LdtkLayerInstance, resource: LdtkResource, public readonly order: number) {
         this.worldPos = vec(level.ldtkLevel.worldX, level.ldtkLevel.worldY);
         this.offset = vec(ldtkLayer.__pxTotalOffsetX, ldtkLayer.__pxTotalOffsetY);
         this.ldtkLayer = ldtkLayer;
-        if (ldtkLayer.intGridCsv.length) {
+        if (ldtkLayer.intGridCsv.length || ldtkLayer.autoLayerTiles.length) {
 
             const rows = ldtkLayer.__cHei;
             const columns = ldtkLayer.__cWid;
@@ -25,6 +28,9 @@ export class IntGridLayer {
                 rows,
                 columns,
             });
+            this.tilemap.z = order;
+            const graphics = this.tilemap.get(GraphicsComponent);
+            graphics.isVisible = ldtkLayer.visible;
 
             // find the intgrid metadata
             const layerMetadata = resource.projectMetadata.defs.layers.find(l => {
@@ -47,6 +53,36 @@ export class IntGridLayer {
                     // TODO might be a mistake to treat 1 as solid if there isn't a labelled solid
                     if (!solidValue && ldtkLayer.intGridCsv[i] === 1) {
                         tile!.solid = true;
+                    }
+                }
+
+                if (ldtkLayer.__tilesetDefUid) {
+                    this.tileset = resource.tilesets.get(ldtkLayer.__tilesetDefUid);
+                    for (let i = 0; i < ldtkLayer.autoLayerTiles.length; i++) {
+                        const tile = ldtkLayer.autoLayerTiles[i];
+                        const xCoord = Math.floor(tile.px[0] / ldtkLayer.__gridSize);
+                        const yCoord = Math.floor(tile.px[1] / ldtkLayer.__gridSize);
+                        const exTile = this.tilemap.getTile(xCoord, yCoord);
+                        if (exTile && this.tileset) {
+                            const tsxCoord = Math.floor((tile.src[0] - (this.tileset.ldtkTileset.padding ?? 0)) / (this.tileset.ldtkTileset.tileGridSize + (this.tileset.ldtkTileset.spacing ?? 0)));
+                            const tsyCoord = Math.floor((tile.src[1] - (this.tileset.ldtkTileset.padding ?? 0)) / (this.tileset.ldtkTileset.tileGridSize + (this.tileset.ldtkTileset.spacing ?? 0)));
+                            // Bit 0 toggles x flip
+                            // Bit 1 toggles 1 flip
+                            // Examples: f=0 (no flip), f=1 (X flip only), f=2 (Y flip only), f=3 (both flips)
+                            const flipHorizontal = !!(tile.f & 0b01);
+                            const flipVertical = !!(tile.f & 0b10);
+                            let sprite = this.tileset.spritesheet.getSprite(tsxCoord, tsyCoord);
+                            if (flipHorizontal || flipVertical) {
+                                sprite = sprite.clone();
+                                sprite.flipHorizontal = flipHorizontal;
+                                sprite.flipVertical = flipVertical;
+                            }
+                            if (sprite) {
+                                exTile!.addGraphic(sprite);
+                            } else {
+                                console.error('Could not find sprite in LDtk spritesheet at', tsxCoord, tsyCoord);
+                            }
+                        }
                     }
                 }
             }
