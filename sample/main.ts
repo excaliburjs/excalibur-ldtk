@@ -2,13 +2,13 @@
 import * as ex from "excalibur";
 import { Player } from './player';
 import { Resources, loader } from "./resources";
-
+ex.Flags.useLegacyImageRenderer();
 const game = new ex.Engine({
     resolution: {
         width: 256,
         height: 256,
     },
-    suppressPlayButton: true,
+    suppressPlayButton: false,
     pixelArt: true,
     pixelRatio: 4,
     displayMode: ex.DisplayMode.FitScreen,
@@ -16,9 +16,6 @@ const game = new ex.Engine({
 
 game.start(loader).then(() => {
     console.log('Game start!');
-
-    game.screen.pixelRatioOverride = 4;
-    game.screen.applyResolutionAndViewport();
 
     Resources.LdtkResource.registerEntityIdentifierFactory('PlayerStart', (props) => {
         const player = new Player({

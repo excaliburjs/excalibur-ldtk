@@ -2,3 +2,7 @@ node_modules
 dist
 main.js
 main.js.map
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
