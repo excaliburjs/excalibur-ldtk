@@ -1,19 +1,19 @@
 import { test, expect } from '@playwright/test';
 
 test('main matches', async ({ page }) => {
-  await page.goto('http://127.0.0.1:8080/sample.html');
+  await page.goto('http://localhost:8080/sample.html');
   await page.click('#excalibur-play');
   await expect(page).toHaveScreenshot();
 });
 
 test('autotile matches', async ({ page }) => {
-  await page.goto('http://127.0.0.1:8080/autotile.html');
+  await page.goto('http://localhost:8080/autotile.html');
   await page.click('#excalibur-play');
   await expect(page).toHaveScreenshot();
 });
 
 test('pure autotile matches', async ({ page }) => {
-  await page.goto('http://127.0.0.1:8080/pureautotile.html');
+  await page.goto('http://localhost:8080/pureautotile.html');
   await page.click('#excalibur-play');
   await expect(page).toHaveScreenshot();
 });
