@@ -6,6 +6,12 @@ export const Resources = {
     LdtkResource: new LdtkResource('./spacing-padding/spacing-padding.ldtk', {
         useTilemapCameraStrategy: true,
         useMapBackgroundColor: true,
+    }),
+    LdtkAutoTile: new LdtkResource('./autotile/autotile.ldtk', {
+        useMapBackgroundColor: true,
+    }),
+    LdtkPureAutoTile: new LdtkResource('./dsml1/dsml1.ldtk', {
+        useMapBackgroundColor: true,
     })
 } as const;
 
