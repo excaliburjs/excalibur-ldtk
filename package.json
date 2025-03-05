@@ -1,6 +1,6 @@
 {
   "name": "@excaliburjs/plugin-ldtk",
-  "version": "0.30.1",
+  "version": "0.30.2",
   "description": "Plugin to support LDtk generated tile maps in Excalibur",
   "main": "./build/umd/excalibur-ldtk.min.js",
   "typings": "./build/umd/src/index.d.ts",
