@@ -38,20 +38,15 @@ export class IntGridLayer {
             });
 
             if (layerMetadata) {
-                const solidValue = layerMetadata.intGridValues.find(val => {
-                    return val?.identifier?.toLocaleLowerCase() === 'solid';
-                });
+                const solidValues = layerMetadata.intGridValues.filter(val => {
+                    return val?.identifier?.toLocaleLowerCase().startsWith('solid');
+                }).map(val => val.value);
 
                 for (let i = 0; i < ldtkLayer.intGridCsv.length; i++) {
                     const xCoord = i % columns;
                     const yCoord = Math.floor(i / columns);
                     const tile = this.tilemap.getTile(xCoord, yCoord);
-                    if (solidValue && ldtkLayer.intGridCsv[i] === solidValue.value) {
-                        tile!.solid = true;
-                    }
-
-                    // TODO might be a mistake to treat 1 as solid if there isn't a labelled solid
-                    if (!solidValue && ldtkLayer.intGridCsv[i] === 1) {
+                    if (solidValues.includes(ldtkLayer.intGridCsv[i])) {
                         tile!.solid = true;
                     }
                 }
