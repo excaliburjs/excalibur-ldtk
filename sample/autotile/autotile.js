@@ -42409,1336 +42409,6 @@ __nested_webpack_require_1787534__.r(__nested_webpack_exports__);
 
 /***/ }),
 
-/***/ "./sample/resources.ts":
-/*!*****************************!*\
-  !*** ./sample/resources.ts ***!
-  \*****************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Resources: () => (/* binding */ Resources),
-/* harmony export */   loader: () => (/* binding */ loader)
-/* harmony export */ });
-/* harmony import */ var excalibur__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! excalibur */ "./node_modules/excalibur/build/esm/excalibur.development.js");
-/* harmony import */ var _excalibur_ldtk__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @excalibur-ldtk */ "./src/index.ts");
-
-
-const Resources = {
-    HeroSpriteSheetPng: new excalibur__WEBPACK_IMPORTED_MODULE_1__.ImageSource('./Solaria Demo Pack Update 03/Solaria Demo Pack Update 03/16x16/Sprites/Hero 01.png'),
-    LdtkResource: new _excalibur_ldtk__WEBPACK_IMPORTED_MODULE_0__.LdtkResource('./spacing-padding/spacing-padding.ldtk', {
-        useTilemapCameraStrategy: true,
-        useMapBackgroundColor: true,
-    }),
-    LdtkAutoTile: new _excalibur_ldtk__WEBPACK_IMPORTED_MODULE_0__.LdtkResource('./autotile/autotile.ldtk', {
-        useMapBackgroundColor: true,
-    }),
-    LdtkPureAutoTile: new _excalibur_ldtk__WEBPACK_IMPORTED_MODULE_0__.LdtkResource('./dsml1/dsml1.ldtk', {
-        useMapBackgroundColor: true,
-    })
-};
-const loader = new excalibur__WEBPACK_IMPORTED_MODULE_1__.Loader();
-for (let resource of Object.values(Resources)) {
-    loader.addResource(resource);
-}
-
-
-/***/ }),
-
-/***/ "./src/entity-layer.ts":
-/*!*****************************!*\
-  !*** ./src/entity-layer.ts ***!
-  \*****************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   EntityLayer: () => (/* binding */ EntityLayer)
-/* harmony export */ });
-/* harmony import */ var excalibur__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! excalibur */ "./node_modules/excalibur/build/esm/excalibur.development.js");
-
-class EntityLayer {
-    constructor(level, ldtkLayer, resource, order) {
-        var _a, _b;
-        this.ldtkLayer = ldtkLayer;
-        this.resource = resource;
-        this.order = order;
-        this.entities = [];
-        this.ldtkToEntity = new Map();
-        this.entityToLdtk = new Map();
-        this.worldPos = (0,excalibur__WEBPACK_IMPORTED_MODULE_0__.vec)(level.ldtkLevel.worldX, level.ldtkLevel.worldY);
-        this.offset = (0,excalibur__WEBPACK_IMPORTED_MODULE_0__.vec)(ldtkLayer.__pxTotalOffsetX, ldtkLayer.__pxTotalOffsetY);
-        if (ldtkLayer.entityInstances) {
-            for (let entity of ldtkLayer.entityInstances) {
-                const entityMetadata = resource.projectMetadata.defs.entities.find(e => {
-                    return e.identifier === entity.__identifier;
-                });
-                if (resource.factories.has(entity.__identifier)) {
-                    const factory = resource.factories.get(entity.__identifier);
-                    if (factory) {
-                        const newEntity = factory({
-                            type: entity.__identifier,
-                            worldPos: (0,excalibur__WEBPACK_IMPORTED_MODULE_0__.vec)(entity.px[0], entity.px[1]).add(this.worldPos.add(this.offset)),
-                            entity,
-                            definition: entityMetadata,
-                            layer: this,
-                        });
-                        if (newEntity) {
-                            this.entities.push(newEntity);
-                            this.ldtkToEntity.set(entity, newEntity);
-                            this.entityToLdtk.set(newEntity, entity);
-                        }
-                    }
-                }
-                else {
-                    const actor = new excalibur__WEBPACK_IMPORTED_MODULE_0__.Actor({
-                        name: entity.__identifier,
-                        pos: (0,excalibur__WEBPACK_IMPORTED_MODULE_0__.vec)(entity.px[0], entity.px[1]).add(this.worldPos.add(this.offset)),
-                        width: entity.width,
-                        height: entity.height,
-                        anchor: (0,excalibur__WEBPACK_IMPORTED_MODULE_0__.vec)((_a = entityMetadata === null || entityMetadata === void 0 ? void 0 : entityMetadata.pivotX) !== null && _a !== void 0 ? _a : 0, (_b = entityMetadata === null || entityMetadata === void 0 ? void 0 : entityMetadata.pivotY) !== null && _b !== void 0 ? _b : 0),
-                        z: order
-                    });
-                    if (entity.__tile) {
-                        const ts = resource.tilesets.get(entity.__tile.tilesetUid);
-                        if (ts) {
-                            const tsxCoord = Math.floor(entity.__tile.x / entity.__tile.w);
-                            const tsyCoord = Math.floor(entity.__tile.y / entity.__tile.h);
-                            const sprite = ts.spritesheet.getSprite(tsxCoord, tsyCoord);
-                            if (sprite) {
-                                actor.graphics.use(sprite);
-                            }
-                        }
-                    }
-                    this.entities.push(actor);
-                    this.ldtkToEntity.set(entity, actor);
-                    this.entityToLdtk.set(actor, entity);
-                }
-            }
-        }
-    }
-    runFactories() {
-        for (let entity of this.ldtkLayer.entityInstances) {
-            const factory = this.resource.factories.get(entity.__identifier);
-            if (!factory) {
-                continue;
-            }
-            const entityMetadata = this.resource.projectMetadata.defs.entities.find(e => {
-                return e.identifier === entity.__identifier;
-            });
-            const newEntity = factory({
-                type: entity.__identifier,
-                worldPos: (0,excalibur__WEBPACK_IMPORTED_MODULE_0__.vec)(entity.px[0], entity.px[1]).add(this.worldPos.add(this.offset)),
-                entity,
-                definition: entityMetadata,
-                layer: this,
-            });
-            if (newEntity) {
-                // remove pre-existing entity (e.g. the default actor created for the entity placement)
-                const preExisting = this.ldtkToEntity.get(entity);
-                if (preExisting) {
-                    const index = this.entities.indexOf(preExisting);
-                    if (index > -1) {
-                        this.entities.splice(index, 1);
-                        this.ldtkToEntity.delete(entity);
-                        this.entityToLdtk.delete(preExisting);
-                    }
-                }
-                this.entities.push(newEntity);
-                this.ldtkToEntity.set(entity, newEntity);
-                this.entityToLdtk.set(newEntity, entity);
-            }
-        }
-    }
-    getEntitiesByIdentifier(identifier) {
-        const ldtkEntities = this.getLdtkEntitiesByIdentifier(identifier);
-        let results = [];
-        for (const ldtk of ldtkEntities) {
-            const maybeEntity = this.ldtkToEntity.get(ldtk);
-            if (maybeEntity) {
-                results.push(maybeEntity);
-            }
-        }
-        return results;
-    }
-    getEntitiesByField(fieldIdentifier, value) {
-        const ldtkEntities = this.getLdtkEntitiesByField(fieldIdentifier, value);
-        let results = [];
-        for (const ldtk of ldtkEntities) {
-            const maybeEntity = this.ldtkToEntity.get(ldtk);
-            if (maybeEntity) {
-                results.push(maybeEntity);
-            }
-        }
-        return results;
-    }
-    /**
-     * Search layer for entities that match an identifier (case insensitive)
-     * @param identifier
-     * @returns
-     */
-    getLdtkEntitiesByIdentifier(identifier) {
-        return this.ldtkLayer.entityInstances.filter(e => e.__identifier.toLocaleLowerCase() === identifier.toLowerCase());
-    }
-    /**
-     * Search layer for entities that match a field and optionally a value (both case insensitive)
-     * @param fieldIdentifier
-     * @param value
-     */
-    getLdtkEntitiesByField(fieldIdentifier, value) {
-        return this.ldtkLayer.entityInstances.filter(e => {
-            if (value !== undefined) {
-                let normalizedValue = value;
-                if (typeof value === 'string') {
-                    normalizedValue = value.toLocaleLowerCase();
-                }
-                const field = e.fieldInstances.find(f => f.__identifier.toLocaleLowerCase() === fieldIdentifier.toLocaleLowerCase());
-                if (field) {
-                    return field.__value === normalizedValue;
-                }
-                return false;
-            }
-            else {
-                return !!e.fieldInstances.find(f => f.__identifier.toLocaleLowerCase() === fieldIdentifier.toLocaleLowerCase());
-            }
-        });
-    }
-}
-
-
-/***/ }),
-
-/***/ "./src/file-loader.ts":
-/*!****************************!*\
-  !*** ./src/file-loader.ts ***!
-  \****************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   FetchLoader: () => (/* binding */ FetchLoader)
-/* harmony export */ });
-const FetchLoader = async (path, contentType) => {
-    const response = await fetch(path);
-    switch (contentType.toLowerCase()) {
-        case 'xml': return await response.text();
-        case 'json': return await response.json();
-        default: return await response.text();
-    }
-};
-
-
-/***/ }),
-
-/***/ "./src/index.ts":
-/*!**********************!*\
-  !*** ./src/index.ts ***!
-  \**********************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   EntityLayer: () => (/* reexport safe */ _entity_layer__WEBPACK_IMPORTED_MODULE_1__.EntityLayer),
-/* harmony export */   FetchLoader: () => (/* reexport safe */ _file_loader__WEBPACK_IMPORTED_MODULE_2__.FetchLoader),
-/* harmony export */   IntGridLayer: () => (/* reexport safe */ _intgrid_layer__WEBPACK_IMPORTED_MODULE_3__.IntGridLayer),
-/* harmony export */   LdtkEntityDefinition: () => (/* reexport safe */ _types__WEBPACK_IMPORTED_MODULE_10__.LdtkEntityDefinition),
-/* harmony export */   LdtkEntityInstance: () => (/* reexport safe */ _types__WEBPACK_IMPORTED_MODULE_10__.LdtkEntityInstance),
-/* harmony export */   LdtkLayerDefinition: () => (/* reexport safe */ _types__WEBPACK_IMPORTED_MODULE_10__.LdtkLayerDefinition),
-/* harmony export */   LdtkLayerInstance: () => (/* reexport safe */ _types__WEBPACK_IMPORTED_MODULE_10__.LdtkLayerInstance),
-/* harmony export */   LdtkLevel: () => (/* reexport safe */ _types__WEBPACK_IMPORTED_MODULE_10__.LdtkLevel),
-/* harmony export */   LdtkProjectMetadata: () => (/* reexport safe */ _types__WEBPACK_IMPORTED_MODULE_10__.LdtkProjectMetadata),
-/* harmony export */   LdtkResource: () => (/* reexport safe */ _ldtk_resource__WEBPACK_IMPORTED_MODULE_0__.LdtkResource),
-/* harmony export */   Level: () => (/* reexport safe */ _level__WEBPACK_IMPORTED_MODULE_5__.Level),
-/* harmony export */   LevelResource: () => (/* reexport safe */ _level_resource__WEBPACK_IMPORTED_MODULE_4__.LevelResource),
-/* harmony export */   LoaderCache: () => (/* reexport safe */ _loader_cache__WEBPACK_IMPORTED_MODULE_6__.LoaderCache),
-/* harmony export */   TileLayer: () => (/* reexport safe */ _tile_layer__WEBPACK_IMPORTED_MODULE_8__.TileLayer),
-/* harmony export */   Tileset: () => (/* reexport safe */ _tileset__WEBPACK_IMPORTED_MODULE_9__.Tileset),
-/* harmony export */   filenameFromPath: () => (/* reexport safe */ _path_util__WEBPACK_IMPORTED_MODULE_7__.filenameFromPath),
-/* harmony export */   mapPath: () => (/* reexport safe */ _path_util__WEBPACK_IMPORTED_MODULE_7__.mapPath),
-/* harmony export */   pathInMap: () => (/* reexport safe */ _path_util__WEBPACK_IMPORTED_MODULE_7__.pathInMap),
-/* harmony export */   pathRelativeToBase: () => (/* reexport safe */ _path_util__WEBPACK_IMPORTED_MODULE_7__.pathRelativeToBase)
-/* harmony export */ });
-/* harmony import */ var _ldtk_resource__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./ldtk-resource */ "./src/ldtk-resource.ts");
-/* harmony import */ var _entity_layer__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./entity-layer */ "./src/entity-layer.ts");
-/* harmony import */ var _file_loader__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./file-loader */ "./src/file-loader.ts");
-/* harmony import */ var _intgrid_layer__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./intgrid-layer */ "./src/intgrid-layer.ts");
-/* harmony import */ var _level_resource__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./level-resource */ "./src/level-resource.ts");
-/* harmony import */ var _level__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./level */ "./src/level.ts");
-/* harmony import */ var _loader_cache__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./loader-cache */ "./src/loader-cache.ts");
-/* harmony import */ var _path_util__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./path-util */ "./src/path-util.ts");
-/* harmony import */ var _tile_layer__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./tile-layer */ "./src/tile-layer.ts");
-/* harmony import */ var _tileset__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./tileset */ "./src/tileset.ts");
-/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./types */ "./src/types.ts");
-
-
-
-
-
-
-
-
-
-
-
-
-
-/***/ }),
-
-/***/ "./src/intgrid-layer.ts":
-/*!******************************!*\
-  !*** ./src/intgrid-layer.ts ***!
-  \******************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   IntGridLayer: () => (/* binding */ IntGridLayer)
-/* harmony export */ });
-/* harmony import */ var excalibur__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! excalibur */ "./node_modules/excalibur/build/esm/excalibur.development.js");
-
-class IntGridLayer {
-    constructor(level, ldtkLayer, resource, order) {
-        var _a, _b, _c, _d;
-        this.order = order;
-        this.worldPos = (0,excalibur__WEBPACK_IMPORTED_MODULE_0__.vec)(level.ldtkLevel.worldX, level.ldtkLevel.worldY);
-        this.offset = (0,excalibur__WEBPACK_IMPORTED_MODULE_0__.vec)(ldtkLayer.__pxTotalOffsetX, ldtkLayer.__pxTotalOffsetY);
-        this.ldtkLayer = ldtkLayer;
-        if (ldtkLayer.intGridCsv.length || ldtkLayer.autoLayerTiles.length) {
-            const rows = ldtkLayer.__cHei;
-            const columns = ldtkLayer.__cWid;
-            this.tilemap = new excalibur__WEBPACK_IMPORTED_MODULE_0__.TileMap({
-                name: ldtkLayer.__identifier,
-                pos: this.worldPos.add(this.offset),
-                tileWidth: ldtkLayer.__gridSize,
-                tileHeight: ldtkLayer.__gridSize,
-                rows,
-                columns,
-            });
-            this.tilemap.z = order;
-            const graphics = this.tilemap.get(excalibur__WEBPACK_IMPORTED_MODULE_0__.GraphicsComponent);
-            graphics.isVisible = ldtkLayer.visible;
-            // find the intgrid metadata
-            const layerMetadata = resource.projectMetadata.defs.layers.find(l => {
-                return ldtkLayer.__identifier === l.identifier;
-            });
-            if (layerMetadata) {
-                const solidValue = layerMetadata.intGridValues.find(val => {
-                    var _a;
-                    return ((_a = val === null || val === void 0 ? void 0 : val.identifier) === null || _a === void 0 ? void 0 : _a.toLocaleLowerCase()) === 'solid';
-                });
-                for (let i = 0; i < ldtkLayer.intGridCsv.length; i++) {
-                    const xCoord = i % columns;
-                    const yCoord = Math.floor(i / columns);
-                    const tile = this.tilemap.getTile(xCoord, yCoord);
-                    if (solidValue && ldtkLayer.intGridCsv[i] === solidValue.value) {
-                        tile.solid = true;
-                    }
-                    // TODO might be a mistake to treat 1 as solid if there isn't a labelled solid
-                    if (!solidValue && ldtkLayer.intGridCsv[i] === 1) {
-                        tile.solid = true;
-                    }
-                }
-                if (ldtkLayer.__tilesetDefUid) {
-                    this.tileset = resource.tilesets.get(ldtkLayer.__tilesetDefUid);
-                    for (let i = 0; i < ldtkLayer.autoLayerTiles.length; i++) {
-                        const tile = ldtkLayer.autoLayerTiles[i];
-                        const xCoord = Math.floor(tile.px[0] / ldtkLayer.__gridSize);
-                        const yCoord = Math.floor(tile.px[1] / ldtkLayer.__gridSize);
-                        const exTile = this.tilemap.getTile(xCoord, yCoord);
-                        if (exTile && this.tileset) {
-                            const tsxCoord = Math.floor((tile.src[0] - ((_a = this.tileset.ldtkTileset.padding) !== null && _a !== void 0 ? _a : 0)) / (this.tileset.ldtkTileset.tileGridSize + ((_b = this.tileset.ldtkTileset.spacing) !== null && _b !== void 0 ? _b : 0)));
-                            const tsyCoord = Math.floor((tile.src[1] - ((_c = this.tileset.ldtkTileset.padding) !== null && _c !== void 0 ? _c : 0)) / (this.tileset.ldtkTileset.tileGridSize + ((_d = this.tileset.ldtkTileset.spacing) !== null && _d !== void 0 ? _d : 0)));
-                            // Bit 0 toggles x flip
-                            // Bit 1 toggles 1 flip
-                            // Examples: f=0 (no flip), f=1 (X flip only), f=2 (Y flip only), f=3 (both flips)
-                            const flipHorizontal = !!(tile.f & 0b01);
-                            const flipVertical = !!(tile.f & 0b10);
-                            let sprite = this.tileset.spritesheet.getSprite(tsxCoord, tsyCoord);
-                            if (flipHorizontal || flipVertical) {
-                                sprite = sprite.clone();
-                                sprite.flipHorizontal = flipHorizontal;
-                                sprite.flipVertical = flipVertical;
-                            }
-                            if (sprite) {
-                                exTile.addGraphic(sprite);
-                            }
-                            else {
-                                console.error('Could not find sprite in LDtk spritesheet at', tsxCoord, tsyCoord);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-
-/***/ }),
-
-/***/ "./src/ldtk-resource.ts":
-/*!******************************!*\
-  !*** ./src/ldtk-resource.ts ***!
-  \******************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   LdtkResource: () => (/* binding */ LdtkResource)
-/* harmony export */ });
-/* harmony import */ var _tile_layer__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./tile-layer */ "./src/tile-layer.ts");
-/* harmony import */ var _path_util__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./path-util */ "./src/path-util.ts");
-/* harmony import */ var _file_loader__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./file-loader */ "./src/file-loader.ts");
-/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./types */ "./src/types.ts");
-/* harmony import */ var compare_versions__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! compare-versions */ "./node_modules/compare-versions/lib/esm/compare.js");
-/* harmony import */ var _loader_cache__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./loader-cache */ "./src/loader-cache.ts");
-/* harmony import */ var excalibur__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! excalibur */ "./node_modules/excalibur/build/esm/excalibur.development.js");
-/* harmony import */ var _level_resource__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./level-resource */ "./src/level-resource.ts");
-/* harmony import */ var _tileset__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./tileset */ "./src/tileset.ts");
-/* harmony import */ var _level__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./level */ "./src/level.ts");
-/* harmony import */ var _entity_layer__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./entity-layer */ "./src/entity-layer.ts");
-/* harmony import */ var _intgrid_layer__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./intgrid-layer */ "./src/intgrid-layer.ts");
-
-
-
-
-
-
-
-
-
-
-
-
-class LdtkResource {
-    constructor(path, options) {
-        this.path = path;
-        this.tilesets = new Map();
-        this.levels = new Map();
-        this.levelsByName = new Map();
-        this.factories = new Map();
-        this.fileLoader = _file_loader__WEBPACK_IMPORTED_MODULE_2__.FetchLoader;
-        this._imageLoader = new _loader_cache__WEBPACK_IMPORTED_MODULE_4__.LoaderCache(excalibur__WEBPACK_IMPORTED_MODULE_10__.ImageSource);
-        this._levelLoader = new _loader_cache__WEBPACK_IMPORTED_MODULE_4__.LoaderCache(_level_resource__WEBPACK_IMPORTED_MODULE_5__.LevelResource);
-        this.startZIndex = 0;
-        this.textQuality = 4;
-        this.useExcaliburWiring = true;
-        this.useMapBackgroundColor = false;
-        this.useTilemapCameraStrategy = false;
-        this.headless = false;
-        this.strict = true;
-        const { useExcaliburWiring, useTilemapCameraStrategy, entityIdentifierFactories, pathMap, useMapBackgroundColor, fileLoader, strict, headless, startZIndex } = { ...options };
-        this.strict = strict !== null && strict !== void 0 ? strict : this.strict;
-        this.headless = headless !== null && headless !== void 0 ? headless : this.headless;
-        this.useExcaliburWiring = useExcaliburWiring !== null && useExcaliburWiring !== void 0 ? useExcaliburWiring : this.useExcaliburWiring;
-        this.useTilemapCameraStrategy = useTilemapCameraStrategy !== null && useTilemapCameraStrategy !== void 0 ? useTilemapCameraStrategy : this.useTilemapCameraStrategy;
-        this.useMapBackgroundColor = useMapBackgroundColor !== null && useMapBackgroundColor !== void 0 ? useMapBackgroundColor : this.useMapBackgroundColor;
-        this.startZIndex = startZIndex !== null && startZIndex !== void 0 ? startZIndex : this.startZIndex;
-        this.fileLoader = fileLoader !== null && fileLoader !== void 0 ? fileLoader : this.fileLoader;
-        this.pathMap = pathMap;
-        for (const key in entityIdentifierFactories) {
-            this.registerEntityIdentifierFactory(key, entityIdentifierFactories[key]);
-        }
-    }
-    async load() {
-        var _a;
-        const data = await this.fileLoader(this.path, 'json');
-        if (this.strict) {
-            try {
-                this.projectMetadata = _types__WEBPACK_IMPORTED_MODULE_3__.LdtkProjectMetadata.parse(data);
-            }
-            catch (e) {
-                console.error(`Could not parse LDtk map from location ${this.path}.\nExcalibur only supports the latest version of LDtk formats as of the plugin's release.`);
-                console.error(`Is your map file corrupted or being interpreted as the wrong type?`);
-                throw e;
-            }
-        }
-        else {
-            this.projectMetadata = data;
-        }
-        if ((0,compare_versions__WEBPACK_IMPORTED_MODULE_11__.compare)(LdtkResource.supportedLdtkVersion, (_a = this.projectMetadata.jsonVersion) !== null && _a !== void 0 ? _a : '0.0.0', ">")) {
-            console.warn(`The excalibur ldtk plugin officially supports ${LdtkResource.supportedLdtkVersion}+, the current map has LDtk version ${this.projectMetadata.jsonVersion}`);
-        }
-        // iterate through the defs
-        // load the tilesets
-        const imagesToLoad = [];
-        for (let tileset of this.projectMetadata.defs.tilesets) {
-            if (tileset.relPath) {
-                const imagePath = (0,_path_util__WEBPACK_IMPORTED_MODULE_1__.pathRelativeToBase)(this.path, tileset.relPath, this.pathMap);
-                const image = this._imageLoader.getOrAdd(imagePath);
-                const friendlyTileset = new _tileset__WEBPACK_IMPORTED_MODULE_6__.Tileset({
-                    image,
-                    ldtkTileset: tileset
-                });
-                this.tilesets.set(tileset.uid, friendlyTileset);
-            }
-            else {
-                if (tileset.identifier !== 'Internal_Icons') {
-                    console.warn(`No tileset image provided for ${tileset.identifier}`);
-                }
-            }
-        }
-        // iterate through the levels
-        // load the level metadata
-        for (let level of this.projectMetadata.levels) {
-            if (level.externalRelPath) {
-                // external levels
-                const levelPath = (0,_path_util__WEBPACK_IMPORTED_MODULE_1__.pathRelativeToBase)(this.path, level.externalRelPath, this.pathMap);
-                this._levelLoader.getOrAdd(levelPath, this, {
-                    headless: this.headless,
-                    strict: this.strict,
-                    fileLoader: this.fileLoader,
-                    imageLoader: this._imageLoader,
-                    pathMap: this.pathMap
-                });
-            }
-            else {
-                // embedded levels
-                const friendlyLevel = new _level__WEBPACK_IMPORTED_MODULE_7__.Level(level, this);
-                this.levels.set(level.uid, friendlyLevel);
-                this.levelsByName.set(level.identifier.toLowerCase(), friendlyLevel);
-            }
-        }
-        await Promise.all([this._imageLoader.load(), this._levelLoader.load()]);
-        this._levelLoader.values().forEach(level => {
-            this.levels.set(level.data.ldtkLevel.uid, level.data);
-            this.levelsByName.set(level.data.ldtkLevel.identifier.toLowerCase(), level.data);
-        });
-        return this.data = this.projectMetadata;
-    }
-    ;
-    isLoaded() {
-        return !!this.data;
-    }
-    registerEntityIdentifierFactory(ldtkEntityIdentifier, factory) {
-        this.factories.set(ldtkEntityIdentifier, factory);
-    }
-    registerEntityIdentifierFactories(factories) {
-        for (const key in factories) {
-            this.registerEntityIdentifierFactory(key, factories[key]);
-        }
-    }
-    /**
-     * Get a level by identifier
-     * @param identifier
-     * @returns
-     */
-    getLevel(identifier) {
-        return this.levelsByName.get(identifier.toLowerCase());
-    }
-    /**
-     * Get the entity layers, optionally provide a level identifier to filter to
-     * @param levelIdentifier
-     */
-    getEntityLayers(levelIdentifier) {
-        let results = [];
-        if (levelIdentifier) {
-            const level = this.getLevel(levelIdentifier);
-            if (level) {
-                for (let layer of level.layers) {
-                    if (layer instanceof _entity_layer__WEBPACK_IMPORTED_MODULE_8__.EntityLayer) {
-                        results.push(layer);
-                    }
-                }
-            }
-        }
-        else {
-            for (const level of this.levels.values()) {
-                for (let layer of level.layers) {
-                    if (layer instanceof _entity_layer__WEBPACK_IMPORTED_MODULE_8__.EntityLayer) {
-                        results.push(layer);
-                    }
-                }
-            }
-        }
-        return results;
-    }
-    getTileLayers(identifier) {
-        let results = [];
-        if (identifier) {
-            const level = this.getLevel(identifier);
-            if (level) {
-                for (let layer of level.layers) {
-                    if (layer instanceof _tile_layer__WEBPACK_IMPORTED_MODULE_0__.TileLayer) {
-                        results.push(layer);
-                    }
-                }
-            }
-        }
-        else {
-            for (const level of this.levels.values()) {
-                for (let layer of level.layers) {
-                    if (layer instanceof _tile_layer__WEBPACK_IMPORTED_MODULE_0__.TileLayer) {
-                        results.push(layer);
-                    }
-                }
-            }
-        }
-        return results;
-    }
-    getIntGridLayers(identifier) {
-        let results = [];
-        if (identifier) {
-            const level = this.getLevel(identifier);
-            if (level) {
-                for (let layer of level.layers) {
-                    if (layer instanceof _intgrid_layer__WEBPACK_IMPORTED_MODULE_9__.IntGridLayer) {
-                        results.push(layer);
-                    }
-                }
-            }
-        }
-        else {
-            for (const level of this.levels.values()) {
-                for (let layer of level.layers) {
-                    if (layer instanceof _intgrid_layer__WEBPACK_IMPORTED_MODULE_9__.IntGridLayer) {
-                        results.push(layer);
-                    }
-                }
-            }
-        }
-        return results;
-    }
-    /**
-     * Search layer for entities that match an identifier (case insensitive)
-     * @param identifier
-     * @returns
-     */
-    getLdtkEntitiesByIdentifier(identifier, levels) {
-        let results = [];
-        const levelsToSearch = levels !== null && levels !== void 0 ? levels : Array.from(this.levels.values()).map(l => l.ldtkLevel.identifier);
-        for (const level of levelsToSearch) {
-            const layers = this.getEntityLayers(level);
-            for (let layer of layers) {
-                results = results.concat(layer.getLdtkEntitiesByIdentifier(identifier));
-            }
-        }
-        return results;
-    }
-    /**
-     * Search levels for ldtk entities that match a field and optionally a value (both case insensitive)
-     * @param fieldIdentifier
-     * @param value
-     */
-    getLdtkEntitiesByField(fieldIdentifier, value, levels) {
-        let results = [];
-        const levelsToSearch = levels !== null && levels !== void 0 ? levels : Array.from(this.levels.values()).map(l => l.ldtkLevel.identifier);
-        for (const level of levelsToSearch) {
-            const layers = this.getEntityLayers(level);
-            for (let layer of layers) {
-                results = results.concat(layer.getLdtkEntitiesByField(fieldIdentifier, value));
-            }
-        }
-        return results;
-    }
-    /**
-     * Search levels for excalibur entities that match an identifier (case insensitive)
-     * @param identifier
-     * @param levels
-     */
-    getEntitiesByIdentifier(identifier, levels) {
-        let results = [];
-        const levelsToSearch = levels !== null && levels !== void 0 ? levels : Array.from(this.levels.values()).map(l => l.ldtkLevel.identifier);
-        for (const level of levelsToSearch) {
-            const layers = this.getEntityLayers(level);
-            for (let layer of layers) {
-                results = results.concat(layer.getEntitiesByIdentifier(identifier));
-            }
-        }
-        return results;
-    }
-    /**
-     * Search levels for excalibur entities that match a field and optionally a value (both case insensitive)
-     * @param fieldIdentifier
-     * @param value
-     * @param levels
-     */
-    getEntitiesByField(fieldIdentifier, value, levels) {
-        let results = [];
-        const levelsToSearch = levels !== null && levels !== void 0 ? levels : Array.from(this.levels.values()).map(l => l.ldtkLevel.identifier);
-        for (const level of levelsToSearch) {
-            const layers = this.getEntityLayers(level);
-            for (let layer of layers) {
-                results = results.concat(layer.getEntitiesByField(fieldIdentifier, value));
-            }
-        }
-        return results;
-    }
-    /**
-     * Get the level bounds given a list of level identifiers (case insensitive)
-     * @param levels
-     */
-    getLevelBounds(levels) {
-        levels = levels !== null && levels !== void 0 ? levels : Array.from(this.levelsByName.keys());
-        let bounds = null;
-        for (const level of this.levels.values()) {
-            if (!levels.includes(level.ldtkLevel.identifier)) {
-                continue;
-            }
-            const firstTileLayer = this.getTileLayers(level.ldtkLevel.identifier)[0];
-            if (firstTileLayer) {
-                const tileBounds = excalibur__WEBPACK_IMPORTED_MODULE_10__.BoundingBox.fromDimension(firstTileLayer.tilemap.tileWidth * firstTileLayer.tilemap.columns, firstTileLayer.tilemap.tileHeight * firstTileLayer.tilemap.rows, excalibur__WEBPACK_IMPORTED_MODULE_10__.Vector.Zero, firstTileLayer.tilemap.pos);
-                if (!bounds) {
-                    bounds = tileBounds;
-                }
-                else {
-                    bounds = bounds.combine(tileBounds);
-                }
-            }
-        }
-        return bounds !== null && bounds !== void 0 ? bounds : new excalibur__WEBPACK_IMPORTED_MODULE_10__.BoundingBox();
-    }
-    addToScene(scene, options) {
-        var _a, _b;
-        const { pos, useLevelOffsets } = { pos: (0,excalibur__WEBPACK_IMPORTED_MODULE_10__.vec)(0, 0), useLevelOffsets: true, ...options };
-        for (let [id, level] of this.levels.entries()) {
-            if ((_a = options === null || options === void 0 ? void 0 : options.levelFilter) === null || _a === void 0 ? void 0 : _a.length) {
-                if (!options.levelFilter.includes(level.ldtkLevel.identifier)) {
-                    continue;
-                }
-            }
-            for (let layer of level.layers) {
-                if (layer instanceof _tile_layer__WEBPACK_IMPORTED_MODULE_0__.TileLayer || layer instanceof _intgrid_layer__WEBPACK_IMPORTED_MODULE_9__.IntGridLayer) {
-                    layer.tilemap.pos = layer.tilemap.pos.add(pos);
-                    if (!useLevelOffsets) {
-                        layer.tilemap.pos = layer.tilemap.pos.sub(layer.worldPos);
-                    }
-                    scene.add(layer.tilemap);
-                }
-                else {
-                    layer.runFactories();
-                    for (let entity of layer.entities) {
-                        const tx = entity.get(excalibur__WEBPACK_IMPORTED_MODULE_10__.TransformComponent);
-                        if (tx) {
-                            tx.pos = tx.pos.add(pos);
-                            if (!useLevelOffsets) {
-                                tx.pos = tx.pos.sub(layer.worldPos);
-                            }
-                        }
-                        scene.add(entity);
-                    }
-                }
-            }
-        }
-        if (this.useExcaliburWiring) {
-            const camera = this.getLdtkEntitiesByField('camera', true)[0];
-            if (camera) {
-                scene.camera.pos = (0,excalibur__WEBPACK_IMPORTED_MODULE_10__.vec)(camera.px[0], camera.px[0]);
-                const zoom = camera.fieldInstances.find(f => f.__identifier.toLocaleLowerCase() === 'zoom');
-                if (zoom) {
-                    scene.camera.zoom = +zoom.__value;
-                }
-            }
-        }
-        if (this.useTilemapCameraStrategy) {
-            let bounds = this.getLevelBounds(options === null || options === void 0 ? void 0 : options.levelFilter);
-            scene.camera.strategy.limitCameraBounds(bounds);
-        }
-        if (this.useMapBackgroundColor) {
-            for (let [id, level] of this.levels.entries()) {
-                if ((_b = options === null || options === void 0 ? void 0 : options.levelFilter) === null || _b === void 0 ? void 0 : _b.length) {
-                    if (!options.levelFilter.includes(level.ldtkLevel.identifier)) {
-                        continue;
-                    }
-                }
-                scene.backgroundColor = level.backgroundColor;
-                break;
-            }
-        }
-    }
-}
-LdtkResource.supportedLdtkVersion = "1.5.3";
-
-
-/***/ }),
-
-/***/ "./src/level-resource.ts":
-/*!*******************************!*\
-  !*** ./src/level-resource.ts ***!
-  \*******************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   LevelResource: () => (/* binding */ LevelResource)
-/* harmony export */ });
-/* harmony import */ var excalibur__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! excalibur */ "./node_modules/excalibur/build/esm/excalibur.development.js");
-/* harmony import */ var _loader_cache__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./loader-cache */ "./src/loader-cache.ts");
-/* harmony import */ var _file_loader__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./file-loader */ "./src/file-loader.ts");
-/* harmony import */ var _level__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./level */ "./src/level.ts");
-/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./types */ "./src/types.ts");
-
-
-
-
-
-/**
- * Loads LDtk levels that are stored in separate files
- */
-class LevelResource {
-    constructor(path, resource, options) {
-        this.path = path;
-        this.resource = resource;
-        this.fileLoader = _file_loader__WEBPACK_IMPORTED_MODULE_1__.FetchLoader;
-        this.strict = true;
-        this.headless = false;
-        const { headless, strict, fileLoader, imageLoader, pathMap } = { ...options };
-        this.fileLoader = fileLoader !== null && fileLoader !== void 0 ? fileLoader : this.fileLoader;
-        this.strict = strict !== null && strict !== void 0 ? strict : this.strict;
-        this.headless = headless !== null && headless !== void 0 ? headless : this.headless;
-        this.imageLoader = imageLoader !== null && imageLoader !== void 0 ? imageLoader : new _loader_cache__WEBPACK_IMPORTED_MODULE_0__.LoaderCache(excalibur__WEBPACK_IMPORTED_MODULE_4__.ImageSource);
-        this.pathMap = pathMap !== null && pathMap !== void 0 ? pathMap : this.pathMap;
-    }
-    async load() {
-        const data = await this.fileLoader(this.path, 'json');
-        let level;
-        if (this.strict) {
-            try {
-                level = _types__WEBPACK_IMPORTED_MODULE_3__.LdtkLevel.parse(data);
-            }
-            catch (e) {
-                console.error(`Could not parse LDtk level data at ${this.path} are you sure a level is there and not corrupt?`);
-                throw e;
-            }
-        }
-        else {
-            level = data;
-        }
-        return this.data = new _level__WEBPACK_IMPORTED_MODULE_2__.Level(level, this.resource);
-    }
-    isLoaded() {
-        return !!this.data;
-    }
-}
-
-
-/***/ }),
-
-/***/ "./src/level.ts":
-/*!**********************!*\
-  !*** ./src/level.ts ***!
-  \**********************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Level: () => (/* binding */ Level)
-/* harmony export */ });
-/* harmony import */ var excalibur__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! excalibur */ "./node_modules/excalibur/build/esm/excalibur.development.js");
-/* harmony import */ var _entity_layer__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./entity-layer */ "./src/entity-layer.ts");
-/* harmony import */ var _intgrid_layer__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./intgrid-layer */ "./src/intgrid-layer.ts");
-/* harmony import */ var _tile_layer__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./tile-layer */ "./src/tile-layer.ts");
-
-
-
-
-class Level {
-    constructor(ldtkLevel, resource) {
-        var _a, _b, _c, _d;
-        this.ldtkLevel = ldtkLevel;
-        this.resource = resource;
-        this.layers = [];
-        if (ldtkLevel.__bgColor) {
-            this.backgroundColor = excalibur__WEBPACK_IMPORTED_MODULE_3__.Color.fromHex(ldtkLevel.__bgColor);
-        }
-        if (ldtkLevel.layerInstances) {
-            let order = resource.startZIndex;
-            let layers = ldtkLevel.layerInstances.slice().reverse();
-            for (let layer of layers) {
-                if (((_a = layer.entityInstances) === null || _a === void 0 ? void 0 : _a.length) !== 0) {
-                    this.layers.push(new _entity_layer__WEBPACK_IMPORTED_MODULE_0__.EntityLayer(this, layer, resource, order));
-                }
-                if (((_b = layer.gridTiles) === null || _b === void 0 ? void 0 : _b.length) !== 0) {
-                    this.layers.push(new _tile_layer__WEBPACK_IMPORTED_MODULE_2__.TileLayer(this, layer, resource, order));
-                }
-                // Includes standard IntGrid, IntGrid w/ AutoTile & AutoTile layers
-                if (((_c = layer.intGridCsv) === null || _c === void 0 ? void 0 : _c.length) !== 0 || ((_d = layer.autoLayerTiles) === null || _d === void 0 ? void 0 : _d.length) !== 0) {
-                    this.layers.push(new _intgrid_layer__WEBPACK_IMPORTED_MODULE_1__.IntGridLayer(this, layer, resource, order));
-                }
-                order++;
-            }
-        }
-    }
-}
-
-
-/***/ }),
-
-/***/ "./src/loader-cache.ts":
-/*!*****************************!*\
-  !*** ./src/loader-cache.ts ***!
-  \*****************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   LoaderCache: () => (/* binding */ LoaderCache)
-/* harmony export */ });
-/**
- * Read through cache for loadables
- */
-class LoaderCache {
-    constructor(type) {
-        this.type = type;
-        this._loaded = false;
-        this.cache = new Map();
-    }
-    getOrAdd(...args) {
-        let resource = this.cache.get(args.join('+'));
-        if (resource) {
-            return resource;
-        }
-        resource = new this.type(...args);
-        this.cache.set(args.join('+'), resource);
-        return resource;
-    }
-    values() {
-        if (this._loaded) {
-            return Array.from(this.cache.values());
-        }
-        throw new Error(`Read through cache not yet loaded! No values to return!`);
-    }
-    async load() {
-        const resources = Array.from(this.cache.entries());
-        const results = await Promise.allSettled(resources.map(i => i[1].load()));
-        // Check for errors loading resources
-        let errored = 0;
-        for (let i = 0; i < results.length; i++) {
-            const result = results[i];
-            if (result.status === 'rejected') {
-                console.error(`Error loading resource at ${resources[i][0]}, is your pathMap correct? or your LDtk map corrupted?`, result.reason);
-                errored++;
-            }
-        }
-        if (errored) {
-            throw new Error(`Error loading ${errored} resources`);
-        }
-        this._loaded = true;
-    }
-}
-
-
-/***/ }),
-
-/***/ "./src/path-util.ts":
-/*!**************************!*\
-  !*** ./src/path-util.ts ***!
-  \**************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   filenameFromPath: () => (/* binding */ filenameFromPath),
-/* harmony export */   mapPath: () => (/* binding */ mapPath),
-/* harmony export */   pathInMap: () => (/* binding */ pathInMap),
-/* harmony export */   pathRelativeToBase: () => (/* binding */ pathRelativeToBase)
-/* harmony export */ });
-function filenameFromPath(inputPath) {
-    const filenameExpression = /[^/\\&\?]+\.\w{2,4}(?=([\#\?&].*$|$))/ig;
-    const matches = inputPath.match(filenameExpression);
-    if (matches) {
-        const match = matches[0];
-        return match;
-    }
-    throw new Error(`Could not locate filename from path: ${inputPath}`);
-}
-function mapPath(inputPath, pathMap) {
-    for (const { path, output } of pathMap) {
-        if (typeof path === 'string') {
-            if (inputPath.includes(path)) {
-                return output;
-            }
-        }
-        else {
-            const match = inputPath.match(path);
-            if (match) {
-                return output.replace('[match]', match[0]);
-                ;
-            }
-        }
-    }
-    return inputPath;
-}
-function pathInMap(inputPath, pathMap) {
-    if (!pathMap)
-        return false;
-    for (const { path, output } of pathMap) {
-        if (typeof path === 'string') {
-            if (inputPath.includes(path)) {
-                return true;
-            }
-        }
-        else {
-            const match = inputPath.match(path);
-            if (match) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-function pathRelativeToBase(basePath, relativeToBase, pathMap) {
-    if (pathInMap(relativeToBase, pathMap) && pathMap) {
-        return mapPath(relativeToBase, pathMap);
-    }
-    // Use absolute path if specified
-    if (relativeToBase.indexOf('/') === 0) {
-        return relativeToBase;
-    }
-    const originSplit = basePath.split('/');
-    const relativeSplit = relativeToBase.split('/');
-    // if origin path is a file, remove it so it's a directory
-    if (originSplit[originSplit.length - 1].includes('.')) {
-        originSplit.pop();
-    }
-    return originSplit.concat(relativeSplit).join('/');
-}
-
-
-/***/ }),
-
-/***/ "./src/tile-layer.ts":
-/*!***************************!*\
-  !*** ./src/tile-layer.ts ***!
-  \***************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   TileLayer: () => (/* binding */ TileLayer)
-/* harmony export */ });
-/* harmony import */ var excalibur__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! excalibur */ "./node_modules/excalibur/build/esm/excalibur.development.js");
-
-class TileLayer {
-    constructor(level, ldtkLayer, resource, order) {
-        var _a, _b, _c, _d;
-        this.order = order;
-        this.worldPos = (0,excalibur__WEBPACK_IMPORTED_MODULE_0__.vec)(level.ldtkLevel.worldX, level.ldtkLevel.worldY);
-        this.offset = (0,excalibur__WEBPACK_IMPORTED_MODULE_0__.vec)(ldtkLayer.__pxTotalOffsetX, ldtkLayer.__pxTotalOffsetY);
-        this.ldtkLayer = ldtkLayer;
-        this.tilemap = new excalibur__WEBPACK_IMPORTED_MODULE_0__.TileMap({
-            name: ldtkLayer.__identifier,
-            pos: this.worldPos.add(this.offset),
-            tileWidth: ldtkLayer.__gridSize,
-            tileHeight: ldtkLayer.__gridSize,
-            rows: ldtkLayer.__cHei,
-            columns: ldtkLayer.__cWid,
-        });
-        this.tilemap.z = order;
-        const graphics = this.tilemap.get(excalibur__WEBPACK_IMPORTED_MODULE_0__.GraphicsComponent);
-        graphics.isVisible = ldtkLayer.visible;
-        if (ldtkLayer.__tilesetDefUid) {
-            this.tileset = resource.tilesets.get(ldtkLayer.__tilesetDefUid);
-            for (let tile of ldtkLayer.gridTiles) {
-                const xCoord = Math.floor(tile.px[0] / ldtkLayer.__gridSize);
-                const yCoord = Math.floor(tile.px[1] / ldtkLayer.__gridSize);
-                const exTile = this.tilemap.getTile(xCoord, yCoord);
-                if (this.tileset) {
-                    const tsxCoord = Math.floor((tile.src[0] - ((_a = this.tileset.ldtkTileset.padding) !== null && _a !== void 0 ? _a : 0)) / (this.tileset.ldtkTileset.tileGridSize + ((_b = this.tileset.ldtkTileset.spacing) !== null && _b !== void 0 ? _b : 0)));
-                    const tsyCoord = Math.floor((tile.src[1] - ((_c = this.tileset.ldtkTileset.padding) !== null && _c !== void 0 ? _c : 0)) / (this.tileset.ldtkTileset.tileGridSize + ((_d = this.tileset.ldtkTileset.spacing) !== null && _d !== void 0 ? _d : 0)));
-                    // Bit 0 toggles x flip
-                    // Bit 1 toggles 1 flip
-                    // Examples: f=0 (no flip), f=1 (X flip only), f=2 (Y flip only), f=3 (both flips)
-                    const flipHorizontal = !!(tile.f & 0b01);
-                    const flipVertical = !!(tile.f & 0b10);
-                    let sprite = this.tileset.spritesheet.getSprite(tsxCoord, tsyCoord);
-                    if (flipHorizontal || flipVertical) {
-                        sprite = sprite.clone();
-                        sprite.flipHorizontal = flipHorizontal;
-                        sprite.flipVertical = flipVertical;
-                    }
-                    if (sprite) {
-                        exTile.addGraphic(sprite);
-                    }
-                    else {
-                        console.error('Could not find sprite in LDtk spritesheet at', tsxCoord, tsyCoord);
-                    }
-                }
-            }
-        }
-        else {
-            console.error('Could not tileset in LDtk', ldtkLayer.__tilesetDefUid, ldtkLayer.__tilesetRelPath);
-        }
-    }
-}
-
-
-/***/ }),
-
-/***/ "./src/tileset.ts":
-/*!************************!*\
-  !*** ./src/tileset.ts ***!
-  \************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Tileset: () => (/* binding */ Tileset)
-/* harmony export */ });
-/* harmony import */ var excalibur__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! excalibur */ "./node_modules/excalibur/build/esm/excalibur.development.js");
-
-class Tileset {
-    constructor(options) {
-        var _a, _b, _c, _d;
-        const { image, ldtkTileset } = options;
-        this.image = image;
-        this.ldtkTileset = ldtkTileset;
-        this.spritesheet = excalibur__WEBPACK_IMPORTED_MODULE_0__.SpriteSheet.fromImageSource({
-            image,
-            grid: {
-                rows: ldtkTileset.pxHei / ldtkTileset.tileGridSize,
-                columns: ldtkTileset.pxWid / ldtkTileset.tileGridSize,
-                spriteHeight: ldtkTileset.tileGridSize,
-                spriteWidth: ldtkTileset.tileGridSize
-            },
-            spacing: {
-                margin: {
-                    x: (_a = ldtkTileset.spacing) !== null && _a !== void 0 ? _a : 0,
-                    y: (_b = ldtkTileset.spacing) !== null && _b !== void 0 ? _b : 0,
-                },
-                originOffset: {
-                    x: (_c = ldtkTileset.padding) !== null && _c !== void 0 ? _c : 0,
-                    y: (_d = ldtkTileset.padding) !== null && _d !== void 0 ? _d : 0
-                }
-            }
-        });
-    }
-}
-
-
-/***/ }),
-
-/***/ "./src/types.ts":
-/*!**********************!*\
-  !*** ./src/types.ts ***!
-  \**********************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   LdtkEntityDefinition: () => (/* binding */ LdtkEntityDefinition),
-/* harmony export */   LdtkEntityInstance: () => (/* binding */ LdtkEntityInstance),
-/* harmony export */   LdtkLayerDefinition: () => (/* binding */ LdtkLayerDefinition),
-/* harmony export */   LdtkLayerInstance: () => (/* binding */ LdtkLayerInstance),
-/* harmony export */   LdtkLevel: () => (/* binding */ LdtkLevel),
-/* harmony export */   LdtkProjectMetadata: () => (/* binding */ LdtkProjectMetadata)
-/* harmony export */ });
-/* harmony import */ var zod__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! zod */ "./node_modules/zod/lib/index.mjs");
-
-const LdtkTilesetRectangle = zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
-    h: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    tilesetUid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    w: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    x: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    y: zod__WEBPACK_IMPORTED_MODULE_0__.z.number()
-});
-const LdtkPixel = zod__WEBPACK_IMPORTED_MODULE_0__.z.tuple([zod__WEBPACK_IMPORTED_MODULE_0__.z.number(), zod__WEBPACK_IMPORTED_MODULE_0__.z.number()]);
-const LdtkFieldInstance = zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
-    __identifier: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
-    __tile: LdtkTilesetRectangle.nullable(),
-    __type: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(), //z.union([z.literal('Int'), z.literal('Float'), z.literal('String'), z.literal('Bool'), z.literal('Enum')]), // TODO this might not work with ENUM
-    __value: zod__WEBPACK_IMPORTED_MODULE_0__.z.any(),
-    defUid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number()
-});
-const LdtkTileInstance = zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
-    a: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    f: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(), // 2-bit int 0bXY flip
-    px: LdtkPixel,
-    src: LdtkPixel,
-    t: zod__WEBPACK_IMPORTED_MODULE_0__.z.number()
-});
-const LdtkEntityInstance = zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
-    __grid: LdtkPixel,
-    __identifier: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
-    __pivot: LdtkPixel,
-    __smartColor: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
-    __tags: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(zod__WEBPACK_IMPORTED_MODULE_0__.z.string()),
-    __tile: LdtkTilesetRectangle.nullable(),
-    __worldX: zod__WEBPACK_IMPORTED_MODULE_0__.z.number().nullable(),
-    __worldY: zod__WEBPACK_IMPORTED_MODULE_0__.z.number().nullable(),
-    defUid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    fieldInstances: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(LdtkFieldInstance),
-    height: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    iid: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
-    px: LdtkPixel,
-    width: zod__WEBPACK_IMPORTED_MODULE_0__.z.number()
-});
-const LdtkLayerInstance = zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
-    __cHei: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    __cWid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    __gridSize: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    __identifier: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
-    __opacity: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    __pxTotalOffsetX: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    __pxTotalOffsetY: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    __tilesetDefUid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number().nullable(),
-    __tilesetRelPath: zod__WEBPACK_IMPORTED_MODULE_0__.z.string().nullable(),
-    __type: zod__WEBPACK_IMPORTED_MODULE_0__.z.union([zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('IntGrid'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('Entities'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('Tiles'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('AutoLayer')]),
-    autoLayerTiles: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(LdtkTileInstance), // only in auto layers
-    entityInstances: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(LdtkEntityInstance), // only in entity layers
-    gridTiles: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(LdtkTileInstance),
-    iid: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
-    intGridCsv: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(zod__WEBPACK_IMPORTED_MODULE_0__.z.number()), // __cWid x __cHei, 0 means empty, values start at 1
-    layerDefUid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    levelId: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    overrideTilesetUid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number().nullable(),
-    pxOffsetX: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    pxOffsetY: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    visible: zod__WEBPACK_IMPORTED_MODULE_0__.z.boolean()
-});
-const LdtkLevel = zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
-    __bgColor: zod__WEBPACK_IMPORTED_MODULE_0__.z.string().nullable(),
-    bgColor: zod__WEBPACK_IMPORTED_MODULE_0__.z.string().nullable(),
-    __bgPos: zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
-        cropRect: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(zod__WEBPACK_IMPORTED_MODULE_0__.z.tuple([zod__WEBPACK_IMPORTED_MODULE_0__.z.number(), zod__WEBPACK_IMPORTED_MODULE_0__.z.number(), zod__WEBPACK_IMPORTED_MODULE_0__.z.number(), zod__WEBPACK_IMPORTED_MODULE_0__.z.number()])), // cropX, cropY, cropWidth, cropHeight
-        scale: zod__WEBPACK_IMPORTED_MODULE_0__.z.tuple([zod__WEBPACK_IMPORTED_MODULE_0__.z.number(), zod__WEBPACK_IMPORTED_MODULE_0__.z.number()]),
-        topLeftPx: LdtkPixel
-    }).nullable(),
-    __neighbours: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
-        dir: zod__WEBPACK_IMPORTED_MODULE_0__.z.union([zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('n'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('s'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('w'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('e'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('ne'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('nw'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('se'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('sw'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('o'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('<'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('>')]),
-        levelIid: zod__WEBPACK_IMPORTED_MODULE_0__.z.string()
-    })),
-    bgRelPath: zod__WEBPACK_IMPORTED_MODULE_0__.z.string().nullable(),
-    externalRelPath: zod__WEBPACK_IMPORTED_MODULE_0__.z.string().nullable(),
-    fieldInstances: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(LdtkFieldInstance),
-    identifier: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
-    iid: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
-    layerInstances: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(LdtkLayerInstance).nullable(), // null if the save levels separately is enabled
-    pxHei: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    pxWid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    uid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    worldDepth: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    worldX: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    worldY: zod__WEBPACK_IMPORTED_MODULE_0__.z.number()
-});
-const LdtkWorld = zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
-    identifier: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
-    iid: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
-    levels: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(LdtkLevel),
-    worldGridHeight: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    worldGridWidth: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    // TODO is this a typo Vania?
-    worldLayout: zod__WEBPACK_IMPORTED_MODULE_0__.z.union([zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('Free'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('GridVania'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('LinearHorizontal'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('LinearVertical')]),
-});
-const LdtkEnumValueDefinition = zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
-    color: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    id: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
-    tileRect: LdtkTilesetRectangle.nullable()
-});
-const LdtkEnumDefinition = zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
-    externalRelPath: zod__WEBPACK_IMPORTED_MODULE_0__.z.string().nullable(),
-    iconTilesetUid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number().nullable(),
-    identifier: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
-    tags: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(zod__WEBPACK_IMPORTED_MODULE_0__.z.string()),
-    uid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    values: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(LdtkEnumValueDefinition)
-});
-const LdtkTilesetDefinition = zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
-    __cHei: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    __cWid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    customData: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
-        data: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
-        tileId: zod__WEBPACK_IMPORTED_MODULE_0__.z.number()
-    })),
-    embedAtlas: zod__WEBPACK_IMPORTED_MODULE_0__.z.string().nullable(),
-    enumTags: zod__WEBPACK_IMPORTED_MODULE_0__.z.optional(zod__WEBPACK_IMPORTED_MODULE_0__.z.array(zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
-        enumValueId: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
-        tileIds: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(zod__WEBPACK_IMPORTED_MODULE_0__.z.number())
-    }))),
-    identifier: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
-    padding: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    pxHei: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    pxWid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    relPath: zod__WEBPACK_IMPORTED_MODULE_0__.z.string().nullable(),
-    spacing: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    tags: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(zod__WEBPACK_IMPORTED_MODULE_0__.z.string()),
-    tagsSourceEnumUid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number().nullable(),
-    tileGridSize: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    uid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number()
-});
-const LdtkLayerDefinition = zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
-    __type: zod__WEBPACK_IMPORTED_MODULE_0__.z.union([zod__WEBPACK_IMPORTED_MODULE_0__.z.literal("IntGrid"), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal("Entities"), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal("Tiles"), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal("AutoLayer")]),
-    autoSourceLayerDefUid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number().nullable(),
-    displayOpacity: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    gridSize: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    identifier: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
-    intGridValues: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
-        color: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
-        groupUid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-        identifier: zod__WEBPACK_IMPORTED_MODULE_0__.z.string().nullable(),
-        tile: LdtkTilesetRectangle.nullable(),
-        value: zod__WEBPACK_IMPORTED_MODULE_0__.z.number()
-    })),
-    intGridValuesGroups: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
-        color: zod__WEBPACK_IMPORTED_MODULE_0__.z.string().nullable(),
-        identifier: zod__WEBPACK_IMPORTED_MODULE_0__.z.string().nullable(),
-        uid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number()
-    })),
-    parallaxFactorX: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    parallaxFactorY: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    parallaxScaling: zod__WEBPACK_IMPORTED_MODULE_0__.z.boolean(),
-    pxOffsetX: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    pxOffsetY: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    tilesetDefUid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number().nullable(),
-    uid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-});
-const LdtkEntityDefinition = zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
-    color: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
-    height: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    identifier: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
-    nineSliceBorders: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(zod__WEBPACK_IMPORTED_MODULE_0__.z.number()),
-    pivotX: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    pivotY: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    tileRect: LdtkTilesetRectangle.nullable(),
-    tileRenderMode: zod__WEBPACK_IMPORTED_MODULE_0__.z.union([
-        zod__WEBPACK_IMPORTED_MODULE_0__.z.literal("Cover"),
-        zod__WEBPACK_IMPORTED_MODULE_0__.z.literal("FitInside"),
-        zod__WEBPACK_IMPORTED_MODULE_0__.z.literal("Repeat"),
-        zod__WEBPACK_IMPORTED_MODULE_0__.z.literal("Stretch"),
-        zod__WEBPACK_IMPORTED_MODULE_0__.z.literal("FullSizeCropped"),
-        zod__WEBPACK_IMPORTED_MODULE_0__.z.literal("FullSizeUncropped"),
-        zod__WEBPACK_IMPORTED_MODULE_0__.z.literal("NineSlice")
-    ]),
-    tilesetId: zod__WEBPACK_IMPORTED_MODULE_0__.z.number().nullable(),
-    uiTileRect: LdtkTilesetRectangle.nullable(),
-    uid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-    width: zod__WEBPACK_IMPORTED_MODULE_0__.z.number()
-});
-const LdtkDefinitions = zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
-    tilesets: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(LdtkTilesetDefinition),
-    enums: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(LdtkEnumDefinition),
-    layers: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(LdtkLayerDefinition),
-    entities: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(LdtkEntityDefinition)
-});
-const LdtkProjectMetadata = zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
-    iid: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
-    bgColor: zod__WEBPACK_IMPORTED_MODULE_0__.z.string().nullable(),
-    defs: LdtkDefinitions,
-    externalLevels: zod__WEBPACK_IMPORTED_MODULE_0__.z.boolean(),
-    jsonVersion: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
-    levels: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(LdtkLevel),
-    toc: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
-        identifier: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
-        instancesData: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
-            fields: zod__WEBPACK_IMPORTED_MODULE_0__.z.any(),
-            heiPx: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-            iids: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
-            widPix: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-            worldX: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
-            worldY: zod__WEBPACK_IMPORTED_MODULE_0__.z.number()
-        }))
-    })),
-    // Moving to worlds array
-    worldGridHeight: zod__WEBPACK_IMPORTED_MODULE_0__.z.number().nullable(),
-    worldGridWidth: zod__WEBPACK_IMPORTED_MODULE_0__.z.number().nullable(),
-    // TODO is this a LDtk docs typo Vania?
-    worldLayout: zod__WEBPACK_IMPORTED_MODULE_0__.z.union([zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('Free'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('GridVania'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('LinearHorizontal'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('LinearVertical')]).nullable(),
-    worlds: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(LdtkWorld)
-});
-
-
-/***/ }),
-
 /***/ "./node_modules/zod/lib/index.mjs":
 /*!****************************************!*\
   !*** ./node_modules/zod/lib/index.mjs ***!
@@ -48241,6 +46911,1343 @@ var z = /*#__PURE__*/Object.freeze({
 
 
 
+/***/ }),
+
+/***/ "./sample/resources.ts":
+/*!*****************************!*\
+  !*** ./sample/resources.ts ***!
+  \*****************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   Resources: () => (/* binding */ Resources),
+/* harmony export */   loader: () => (/* binding */ loader)
+/* harmony export */ });
+/* harmony import */ var excalibur__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! excalibur */ "./node_modules/excalibur/build/esm/excalibur.development.js");
+/* harmony import */ var _excalibur_ldtk__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @excalibur-ldtk */ "./src/index.ts");
+
+
+const Resources = {
+    HeroSpriteSheetPng: new excalibur__WEBPACK_IMPORTED_MODULE_0__.ImageSource('./Solaria Demo Pack Update 03/Solaria Demo Pack Update 03/16x16/Sprites/Hero 01.png'),
+    LdtkResource: new _excalibur_ldtk__WEBPACK_IMPORTED_MODULE_1__.LdtkResource('./spacing-padding/spacing-padding.ldtk', {
+        useTilemapCameraStrategy: true,
+        useMapBackgroundColor: true,
+    }),
+    LdtkAutoTile: new _excalibur_ldtk__WEBPACK_IMPORTED_MODULE_1__.LdtkResource('./autotile/autotile.ldtk', {
+        useMapBackgroundColor: true,
+    }),
+    LdtkPureAutoTile: new _excalibur_ldtk__WEBPACK_IMPORTED_MODULE_1__.LdtkResource('./dsml1/dsml1.ldtk', {
+        useMapBackgroundColor: true,
+    })
+};
+const loader = new excalibur__WEBPACK_IMPORTED_MODULE_0__.Loader();
+for (let resource of Object.values(Resources)) {
+    loader.addResource(resource);
+}
+
+
+/***/ }),
+
+/***/ "./src/entity-layer.ts":
+/*!*****************************!*\
+  !*** ./src/entity-layer.ts ***!
+  \*****************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   EntityLayer: () => (/* binding */ EntityLayer)
+/* harmony export */ });
+/* harmony import */ var excalibur__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! excalibur */ "./node_modules/excalibur/build/esm/excalibur.development.js");
+
+class EntityLayer {
+    constructor(level, ldtkLayer, resource, order) {
+        this.ldtkLayer = ldtkLayer;
+        this.resource = resource;
+        this.order = order;
+        this.entities = [];
+        this.ldtkToEntity = new Map();
+        this.entityToLdtk = new Map();
+        this.worldPos = (0,excalibur__WEBPACK_IMPORTED_MODULE_0__.vec)(level.ldtkLevel.worldX, level.ldtkLevel.worldY);
+        this.offset = (0,excalibur__WEBPACK_IMPORTED_MODULE_0__.vec)(ldtkLayer.__pxTotalOffsetX, ldtkLayer.__pxTotalOffsetY);
+        console.log("yo");
+    }
+    runFactories() {
+        var _a, _b;
+        const ldtkLayer = this.ldtkLayer;
+        const resource = this.resource;
+        const order = this.order;
+        if (ldtkLayer.entityInstances) {
+            for (let entity of ldtkLayer.entityInstances) {
+                const entityMetadata = resource.projectMetadata.defs.entities.find(e => {
+                    return e.identifier === entity.__identifier;
+                });
+                if (resource.factories.has(entity.__identifier)) {
+                    const factory = resource.factories.get(entity.__identifier);
+                    if (factory) {
+                        const newEntity = factory({
+                            type: entity.__identifier,
+                            worldPos: (0,excalibur__WEBPACK_IMPORTED_MODULE_0__.vec)(entity.px[0], entity.px[1]).add(this.worldPos.add(this.offset)),
+                            entity,
+                            definition: entityMetadata,
+                            layer: this,
+                        });
+                        if (newEntity) {
+                            this.entities.push(newEntity);
+                            this.ldtkToEntity.set(entity, newEntity);
+                            this.entityToLdtk.set(newEntity, entity);
+                        }
+                    }
+                }
+                else {
+                    if (entity.__tile) {
+                        const actor = new excalibur__WEBPACK_IMPORTED_MODULE_0__.Actor({
+                            name: entity.__identifier,
+                            pos: (0,excalibur__WEBPACK_IMPORTED_MODULE_0__.vec)(entity.px[0], entity.px[1]).add(this.worldPos.add(this.offset)),
+                            width: entity.width,
+                            height: entity.height,
+                            anchor: (0,excalibur__WEBPACK_IMPORTED_MODULE_0__.vec)((_a = entityMetadata === null || entityMetadata === void 0 ? void 0 : entityMetadata.pivotX) !== null && _a !== void 0 ? _a : 0, (_b = entityMetadata === null || entityMetadata === void 0 ? void 0 : entityMetadata.pivotY) !== null && _b !== void 0 ? _b : 0),
+                            z: order
+                        });
+                        const ts = resource.tilesets.get(entity.__tile.tilesetUid);
+                        if (ts) {
+                            const tsxCoord = Math.floor(entity.__tile.x / entity.__tile.w);
+                            const tsyCoord = Math.floor(entity.__tile.y / entity.__tile.h);
+                            const sprite = ts.spritesheet.getSprite(tsxCoord, tsyCoord);
+                            if (sprite) {
+                                actor.graphics.use(sprite);
+                            }
+                        }
+                        this.entities.push(actor);
+                        this.ldtkToEntity.set(entity, actor);
+                        this.entityToLdtk.set(actor, entity);
+                    }
+                }
+            }
+        }
+        // for (let entity of this.ldtkLayer.entityInstances) {
+        //   const factory = this.resource.factories.get(entity.__identifier);
+        //   if (!factory) { continue }
+        //
+        //   const entityMetadata = this.resource.projectMetadata.defs.entities.find(e => {
+        //     return e.identifier === entity.__identifier
+        //   });
+        //
+        //   const newEntity = factory({
+        //     type: entity.__identifier,
+        //     worldPos: vec(entity.px[0], entity.px[1]).add(this.worldPos.add(this.offset)),
+        //     entity,
+        //     definition: entityMetadata,
+        //     layer: this,
+        //   });
+        //
+        //   if (newEntity) {
+        //     // remove pre-existing entity (e.g. the default actor created for the entity placement)
+        //     const preExisting = this.ldtkToEntity.get(entity);
+        //     if (preExisting) {
+        //       const index = this.entities.indexOf(preExisting);
+        //       if (index > -1) {
+        //         this.entities.splice(index, 1);
+        //         this.ldtkToEntity.delete(entity);
+        //         this.entityToLdtk.delete(preExisting);
+        //       }
+        //     }
+        //
+        //     this.entities.push(newEntity);
+        //     this.ldtkToEntity.set(entity, newEntity);
+        //     this.entityToLdtk.set(newEntity, entity);
+        //   }
+        // }
+    }
+    getEntitiesByIdentifier(identifier) {
+        const ldtkEntities = this.getLdtkEntitiesByIdentifier(identifier);
+        let results = [];
+        for (const ldtk of ldtkEntities) {
+            const maybeEntity = this.ldtkToEntity.get(ldtk);
+            if (maybeEntity) {
+                results.push(maybeEntity);
+            }
+        }
+        return results;
+    }
+    getEntitiesByField(fieldIdentifier, value) {
+        const ldtkEntities = this.getLdtkEntitiesByField(fieldIdentifier, value);
+        let results = [];
+        for (const ldtk of ldtkEntities) {
+            const maybeEntity = this.ldtkToEntity.get(ldtk);
+            if (maybeEntity) {
+                results.push(maybeEntity);
+            }
+        }
+        return results;
+    }
+    /**
+     * Search layer for entities that match an identifier (case insensitive)
+     * @param identifier
+     * @returns
+     */
+    getLdtkEntitiesByIdentifier(identifier) {
+        return this.ldtkLayer.entityInstances.filter(e => e.__identifier.toLocaleLowerCase() === identifier.toLowerCase());
+    }
+    /**
+     * Search layer for entities that match a field and optionally a value (both case insensitive)
+     * @param fieldIdentifier
+     * @param value
+     */
+    getLdtkEntitiesByField(fieldIdentifier, value) {
+        return this.ldtkLayer.entityInstances.filter(e => {
+            if (value !== undefined) {
+                let normalizedValue = value;
+                if (typeof value === 'string') {
+                    normalizedValue = value.toLocaleLowerCase();
+                }
+                const field = e.fieldInstances.find(f => f.__identifier.toLocaleLowerCase() === fieldIdentifier.toLocaleLowerCase());
+                if (field) {
+                    return field.__value === normalizedValue;
+                }
+                return false;
+            }
+            else {
+                return !!e.fieldInstances.find(f => f.__identifier.toLocaleLowerCase() === fieldIdentifier.toLocaleLowerCase());
+            }
+        });
+    }
+}
+
+
+/***/ }),
+
+/***/ "./src/file-loader.ts":
+/*!****************************!*\
+  !*** ./src/file-loader.ts ***!
+  \****************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   FetchLoader: () => (/* binding */ FetchLoader)
+/* harmony export */ });
+const FetchLoader = async (path, contentType) => {
+    const response = await fetch(path);
+    switch (contentType.toLowerCase()) {
+        case 'xml': return await response.text();
+        case 'json': return await response.json();
+        default: return await response.text();
+    }
+};
+
+
+/***/ }),
+
+/***/ "./src/index.ts":
+/*!**********************!*\
+  !*** ./src/index.ts ***!
+  \**********************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   EntityLayer: () => (/* reexport safe */ _entity_layer__WEBPACK_IMPORTED_MODULE_1__.EntityLayer),
+/* harmony export */   FetchLoader: () => (/* reexport safe */ _file_loader__WEBPACK_IMPORTED_MODULE_2__.FetchLoader),
+/* harmony export */   IntGridLayer: () => (/* reexport safe */ _intgrid_layer__WEBPACK_IMPORTED_MODULE_3__.IntGridLayer),
+/* harmony export */   LdtkEntityDefinition: () => (/* reexport safe */ _types__WEBPACK_IMPORTED_MODULE_10__.LdtkEntityDefinition),
+/* harmony export */   LdtkEntityInstance: () => (/* reexport safe */ _types__WEBPACK_IMPORTED_MODULE_10__.LdtkEntityInstance),
+/* harmony export */   LdtkLayerDefinition: () => (/* reexport safe */ _types__WEBPACK_IMPORTED_MODULE_10__.LdtkLayerDefinition),
+/* harmony export */   LdtkLayerInstance: () => (/* reexport safe */ _types__WEBPACK_IMPORTED_MODULE_10__.LdtkLayerInstance),
+/* harmony export */   LdtkLevel: () => (/* reexport safe */ _types__WEBPACK_IMPORTED_MODULE_10__.LdtkLevel),
+/* harmony export */   LdtkProjectMetadata: () => (/* reexport safe */ _types__WEBPACK_IMPORTED_MODULE_10__.LdtkProjectMetadata),
+/* harmony export */   LdtkResource: () => (/* reexport safe */ _ldtk_resource__WEBPACK_IMPORTED_MODULE_0__.LdtkResource),
+/* harmony export */   Level: () => (/* reexport safe */ _level__WEBPACK_IMPORTED_MODULE_5__.Level),
+/* harmony export */   LevelResource: () => (/* reexport safe */ _level_resource__WEBPACK_IMPORTED_MODULE_4__.LevelResource),
+/* harmony export */   LoaderCache: () => (/* reexport safe */ _loader_cache__WEBPACK_IMPORTED_MODULE_6__.LoaderCache),
+/* harmony export */   TileLayer: () => (/* reexport safe */ _tile_layer__WEBPACK_IMPORTED_MODULE_8__.TileLayer),
+/* harmony export */   Tileset: () => (/* reexport safe */ _tileset__WEBPACK_IMPORTED_MODULE_9__.Tileset),
+/* harmony export */   filenameFromPath: () => (/* reexport safe */ _path_util__WEBPACK_IMPORTED_MODULE_7__.filenameFromPath),
+/* harmony export */   mapPath: () => (/* reexport safe */ _path_util__WEBPACK_IMPORTED_MODULE_7__.mapPath),
+/* harmony export */   pathInMap: () => (/* reexport safe */ _path_util__WEBPACK_IMPORTED_MODULE_7__.pathInMap),
+/* harmony export */   pathRelativeToBase: () => (/* reexport safe */ _path_util__WEBPACK_IMPORTED_MODULE_7__.pathRelativeToBase)
+/* harmony export */ });
+/* harmony import */ var _ldtk_resource__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./ldtk-resource */ "./src/ldtk-resource.ts");
+/* harmony import */ var _entity_layer__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./entity-layer */ "./src/entity-layer.ts");
+/* harmony import */ var _file_loader__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./file-loader */ "./src/file-loader.ts");
+/* harmony import */ var _intgrid_layer__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./intgrid-layer */ "./src/intgrid-layer.ts");
+/* harmony import */ var _level_resource__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./level-resource */ "./src/level-resource.ts");
+/* harmony import */ var _level__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./level */ "./src/level.ts");
+/* harmony import */ var _loader_cache__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./loader-cache */ "./src/loader-cache.ts");
+/* harmony import */ var _path_util__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./path-util */ "./src/path-util.ts");
+/* harmony import */ var _tile_layer__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./tile-layer */ "./src/tile-layer.ts");
+/* harmony import */ var _tileset__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./tileset */ "./src/tileset.ts");
+/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./types */ "./src/types.ts");
+
+
+
+
+
+
+
+
+
+
+
+
+
+/***/ }),
+
+/***/ "./src/intgrid-layer.ts":
+/*!******************************!*\
+  !*** ./src/intgrid-layer.ts ***!
+  \******************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   IntGridLayer: () => (/* binding */ IntGridLayer)
+/* harmony export */ });
+/* harmony import */ var excalibur__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! excalibur */ "./node_modules/excalibur/build/esm/excalibur.development.js");
+
+class IntGridLayer {
+    constructor(level, ldtkLayer, resource, order) {
+        var _a, _b, _c, _d;
+        this.order = order;
+        this.worldPos = (0,excalibur__WEBPACK_IMPORTED_MODULE_0__.vec)(level.ldtkLevel.worldX, level.ldtkLevel.worldY);
+        this.offset = (0,excalibur__WEBPACK_IMPORTED_MODULE_0__.vec)(ldtkLayer.__pxTotalOffsetX, ldtkLayer.__pxTotalOffsetY);
+        this.ldtkLayer = ldtkLayer;
+        if (ldtkLayer.intGridCsv.length || ldtkLayer.autoLayerTiles.length) {
+            const rows = ldtkLayer.__cHei;
+            const columns = ldtkLayer.__cWid;
+            this.tilemap = new excalibur__WEBPACK_IMPORTED_MODULE_0__.TileMap({
+                name: ldtkLayer.__identifier,
+                pos: this.worldPos.add(this.offset),
+                tileWidth: ldtkLayer.__gridSize,
+                tileHeight: ldtkLayer.__gridSize,
+                rows,
+                columns,
+            });
+            this.tilemap.z = order;
+            const graphics = this.tilemap.get(excalibur__WEBPACK_IMPORTED_MODULE_0__.GraphicsComponent);
+            graphics.isVisible = ldtkLayer.visible;
+            // find the intgrid metadata
+            const layerMetadata = resource.projectMetadata.defs.layers.find(l => {
+                return ldtkLayer.__identifier === l.identifier;
+            });
+            if (layerMetadata) {
+                const solidValue = layerMetadata.intGridValues.find(val => {
+                    var _a;
+                    return ((_a = val === null || val === void 0 ? void 0 : val.identifier) === null || _a === void 0 ? void 0 : _a.toLocaleLowerCase()) === 'solid';
+                });
+                for (let i = 0; i < ldtkLayer.intGridCsv.length; i++) {
+                    const xCoord = i % columns;
+                    const yCoord = Math.floor(i / columns);
+                    const tile = this.tilemap.getTile(xCoord, yCoord);
+                    if (solidValue && ldtkLayer.intGridCsv[i] === solidValue.value) {
+                        tile.solid = true;
+                    }
+                    // TODO might be a mistake to treat 1 as solid if there isn't a labelled solid
+                    if (!solidValue && ldtkLayer.intGridCsv[i] === 1) {
+                        tile.solid = true;
+                    }
+                }
+                if (ldtkLayer.__tilesetDefUid) {
+                    this.tileset = resource.tilesets.get(ldtkLayer.__tilesetDefUid);
+                    for (let i = 0; i < ldtkLayer.autoLayerTiles.length; i++) {
+                        const tile = ldtkLayer.autoLayerTiles[i];
+                        const xCoord = Math.floor(tile.px[0] / ldtkLayer.__gridSize);
+                        const yCoord = Math.floor(tile.px[1] / ldtkLayer.__gridSize);
+                        const exTile = this.tilemap.getTile(xCoord, yCoord);
+                        if (exTile && this.tileset) {
+                            const tsxCoord = Math.floor((tile.src[0] - ((_a = this.tileset.ldtkTileset.padding) !== null && _a !== void 0 ? _a : 0)) / (this.tileset.ldtkTileset.tileGridSize + ((_b = this.tileset.ldtkTileset.spacing) !== null && _b !== void 0 ? _b : 0)));
+                            const tsyCoord = Math.floor((tile.src[1] - ((_c = this.tileset.ldtkTileset.padding) !== null && _c !== void 0 ? _c : 0)) / (this.tileset.ldtkTileset.tileGridSize + ((_d = this.tileset.ldtkTileset.spacing) !== null && _d !== void 0 ? _d : 0)));
+                            // Bit 0 toggles x flip
+                            // Bit 1 toggles 1 flip
+                            // Examples: f=0 (no flip), f=1 (X flip only), f=2 (Y flip only), f=3 (both flips)
+                            const flipHorizontal = !!(tile.f & 0b01);
+                            const flipVertical = !!(tile.f & 0b10);
+                            let sprite = this.tileset.spritesheet.getSprite(tsxCoord, tsyCoord);
+                            if (flipHorizontal || flipVertical) {
+                                sprite = sprite.clone();
+                                sprite.flipHorizontal = flipHorizontal;
+                                sprite.flipVertical = flipVertical;
+                            }
+                            if (sprite) {
+                                exTile.addGraphic(sprite);
+                            }
+                            else {
+                                console.error('Could not find sprite in LDtk spritesheet at', tsxCoord, tsyCoord);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+/***/ }),
+
+/***/ "./src/ldtk-resource.ts":
+/*!******************************!*\
+  !*** ./src/ldtk-resource.ts ***!
+  \******************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   LdtkResource: () => (/* binding */ LdtkResource)
+/* harmony export */ });
+/* harmony import */ var _tile_layer__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./tile-layer */ "./src/tile-layer.ts");
+/* harmony import */ var _path_util__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./path-util */ "./src/path-util.ts");
+/* harmony import */ var _file_loader__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./file-loader */ "./src/file-loader.ts");
+/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./types */ "./src/types.ts");
+/* harmony import */ var compare_versions__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! compare-versions */ "./node_modules/compare-versions/lib/esm/compare.js");
+/* harmony import */ var _loader_cache__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./loader-cache */ "./src/loader-cache.ts");
+/* harmony import */ var excalibur__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! excalibur */ "./node_modules/excalibur/build/esm/excalibur.development.js");
+/* harmony import */ var _level_resource__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./level-resource */ "./src/level-resource.ts");
+/* harmony import */ var _tileset__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./tileset */ "./src/tileset.ts");
+/* harmony import */ var _level__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./level */ "./src/level.ts");
+/* harmony import */ var _entity_layer__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./entity-layer */ "./src/entity-layer.ts");
+/* harmony import */ var _intgrid_layer__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./intgrid-layer */ "./src/intgrid-layer.ts");
+
+
+
+
+
+
+
+
+
+
+
+
+class LdtkResource {
+    constructor(path, options) {
+        this.path = path;
+        this.tilesets = new Map();
+        this.levels = new Map();
+        this.levelsByName = new Map();
+        this.factories = new Map();
+        this.fileLoader = _file_loader__WEBPACK_IMPORTED_MODULE_2__.FetchLoader;
+        this._imageLoader = new _loader_cache__WEBPACK_IMPORTED_MODULE_5__.LoaderCache(excalibur__WEBPACK_IMPORTED_MODULE_6__.ImageSource);
+        this._levelLoader = new _loader_cache__WEBPACK_IMPORTED_MODULE_5__.LoaderCache(_level_resource__WEBPACK_IMPORTED_MODULE_7__.LevelResource);
+        this.startZIndex = 0;
+        this.textQuality = 4;
+        this.useExcaliburWiring = true;
+        this.useMapBackgroundColor = false;
+        this.useTilemapCameraStrategy = false;
+        this.headless = false;
+        this.strict = true;
+        const { useExcaliburWiring, useTilemapCameraStrategy, entityIdentifierFactories, pathMap, useMapBackgroundColor, fileLoader, strict, headless, startZIndex } = { ...options };
+        this.strict = strict !== null && strict !== void 0 ? strict : this.strict;
+        this.headless = headless !== null && headless !== void 0 ? headless : this.headless;
+        this.useExcaliburWiring = useExcaliburWiring !== null && useExcaliburWiring !== void 0 ? useExcaliburWiring : this.useExcaliburWiring;
+        this.useTilemapCameraStrategy = useTilemapCameraStrategy !== null && useTilemapCameraStrategy !== void 0 ? useTilemapCameraStrategy : this.useTilemapCameraStrategy;
+        this.useMapBackgroundColor = useMapBackgroundColor !== null && useMapBackgroundColor !== void 0 ? useMapBackgroundColor : this.useMapBackgroundColor;
+        this.startZIndex = startZIndex !== null && startZIndex !== void 0 ? startZIndex : this.startZIndex;
+        this.fileLoader = fileLoader !== null && fileLoader !== void 0 ? fileLoader : this.fileLoader;
+        this.pathMap = pathMap;
+        for (const key in entityIdentifierFactories) {
+            this.registerEntityIdentifierFactory(key, entityIdentifierFactories[key]);
+        }
+    }
+    async load() {
+        var _a;
+        const data = await this.fileLoader(this.path, 'json');
+        if (this.strict) {
+            try {
+                this.projectMetadata = _types__WEBPACK_IMPORTED_MODULE_3__.LdtkProjectMetadata.parse(data);
+            }
+            catch (e) {
+                console.error(`Could not parse LDtk map from location ${this.path}.\nExcalibur only supports the latest version of LDtk formats as of the plugin's release.`);
+                console.error(`Is your map file corrupted or being interpreted as the wrong type?`);
+                throw e;
+            }
+        }
+        else {
+            this.projectMetadata = data;
+        }
+        if ((0,compare_versions__WEBPACK_IMPORTED_MODULE_4__.compare)(LdtkResource.supportedLdtkVersion, (_a = this.projectMetadata.jsonVersion) !== null && _a !== void 0 ? _a : '0.0.0', ">")) {
+            console.warn(`The excalibur ldtk plugin officially supports ${LdtkResource.supportedLdtkVersion}+, the current map has LDtk version ${this.projectMetadata.jsonVersion}`);
+        }
+        // iterate through the defs
+        // load the tilesets
+        const imagesToLoad = [];
+        for (let tileset of this.projectMetadata.defs.tilesets) {
+            if (tileset.relPath) {
+                const imagePath = (0,_path_util__WEBPACK_IMPORTED_MODULE_1__.pathRelativeToBase)(this.path, tileset.relPath, this.pathMap);
+                const image = this._imageLoader.getOrAdd(imagePath);
+                const friendlyTileset = new _tileset__WEBPACK_IMPORTED_MODULE_8__.Tileset({
+                    image,
+                    ldtkTileset: tileset
+                });
+                this.tilesets.set(tileset.uid, friendlyTileset);
+            }
+            else {
+                if (tileset.identifier !== 'Internal_Icons') {
+                    console.warn(`No tileset image provided for ${tileset.identifier}`);
+                }
+            }
+        }
+        // iterate through the levels
+        // load the level metadata
+        for (let level of this.projectMetadata.levels) {
+            if (level.externalRelPath) {
+                // external levels
+                const levelPath = (0,_path_util__WEBPACK_IMPORTED_MODULE_1__.pathRelativeToBase)(this.path, level.externalRelPath, this.pathMap);
+                this._levelLoader.getOrAdd(levelPath, this, {
+                    headless: this.headless,
+                    strict: this.strict,
+                    fileLoader: this.fileLoader,
+                    imageLoader: this._imageLoader,
+                    pathMap: this.pathMap
+                });
+            }
+            else {
+                // embedded levels
+                const friendlyLevel = new _level__WEBPACK_IMPORTED_MODULE_9__.Level(level, this);
+                this.levels.set(level.uid, friendlyLevel);
+                this.levelsByName.set(level.identifier.toLowerCase(), friendlyLevel);
+            }
+        }
+        await Promise.all([this._imageLoader.load(), this._levelLoader.load()]);
+        this._levelLoader.values().forEach(level => {
+            this.levels.set(level.data.ldtkLevel.uid, level.data);
+            this.levelsByName.set(level.data.ldtkLevel.identifier.toLowerCase(), level.data);
+        });
+        return this.data = this.projectMetadata;
+    }
+    ;
+    isLoaded() {
+        return !!this.data;
+    }
+    registerEntityIdentifierFactory(ldtkEntityIdentifier, factory) {
+        this.factories.set(ldtkEntityIdentifier, factory);
+    }
+    registerEntityIdentifierFactories(factories) {
+        for (const key in factories) {
+            this.registerEntityIdentifierFactory(key, factories[key]);
+        }
+    }
+    /**
+     * Get a level by identifier
+     * @param identifier
+     * @returns
+     */
+    getLevel(identifier) {
+        return this.levelsByName.get(identifier.toLowerCase());
+    }
+    /**
+     * Get the entity layers, optionally provide a level identifier to filter to
+     * @param levelIdentifier
+     */
+    getEntityLayers(levelIdentifier) {
+        let results = [];
+        if (levelIdentifier) {
+            const level = this.getLevel(levelIdentifier);
+            if (level) {
+                for (let layer of level.layers) {
+                    if (layer instanceof _entity_layer__WEBPACK_IMPORTED_MODULE_10__.EntityLayer) {
+                        results.push(layer);
+                    }
+                }
+            }
+        }
+        else {
+            for (const level of this.levels.values()) {
+                for (let layer of level.layers) {
+                    if (layer instanceof _entity_layer__WEBPACK_IMPORTED_MODULE_10__.EntityLayer) {
+                        results.push(layer);
+                    }
+                }
+            }
+        }
+        return results;
+    }
+    getTileLayers(identifier) {
+        let results = [];
+        if (identifier) {
+            const level = this.getLevel(identifier);
+            if (level) {
+                for (let layer of level.layers) {
+                    if (layer instanceof _tile_layer__WEBPACK_IMPORTED_MODULE_0__.TileLayer) {
+                        results.push(layer);
+                    }
+                }
+            }
+        }
+        else {
+            for (const level of this.levels.values()) {
+                for (let layer of level.layers) {
+                    if (layer instanceof _tile_layer__WEBPACK_IMPORTED_MODULE_0__.TileLayer) {
+                        results.push(layer);
+                    }
+                }
+            }
+        }
+        return results;
+    }
+    getIntGridLayers(identifier) {
+        let results = [];
+        if (identifier) {
+            const level = this.getLevel(identifier);
+            if (level) {
+                for (let layer of level.layers) {
+                    if (layer instanceof _intgrid_layer__WEBPACK_IMPORTED_MODULE_11__.IntGridLayer) {
+                        results.push(layer);
+                    }
+                }
+            }
+        }
+        else {
+            for (const level of this.levels.values()) {
+                for (let layer of level.layers) {
+                    if (layer instanceof _intgrid_layer__WEBPACK_IMPORTED_MODULE_11__.IntGridLayer) {
+                        results.push(layer);
+                    }
+                }
+            }
+        }
+        return results;
+    }
+    /**
+     * Search layer for entities that match an identifier (case insensitive)
+     * @param identifier
+     * @returns
+     */
+    getLdtkEntitiesByIdentifier(identifier, levels) {
+        let results = [];
+        const levelsToSearch = levels !== null && levels !== void 0 ? levels : Array.from(this.levels.values()).map(l => l.ldtkLevel.identifier);
+        for (const level of levelsToSearch) {
+            const layers = this.getEntityLayers(level);
+            for (let layer of layers) {
+                results = results.concat(layer.getLdtkEntitiesByIdentifier(identifier));
+            }
+        }
+        return results;
+    }
+    /**
+     * Search levels for ldtk entities that match a field and optionally a value (both case insensitive)
+     * @param fieldIdentifier
+     * @param value
+     */
+    getLdtkEntitiesByField(fieldIdentifier, value, levels) {
+        let results = [];
+        const levelsToSearch = levels !== null && levels !== void 0 ? levels : Array.from(this.levels.values()).map(l => l.ldtkLevel.identifier);
+        for (const level of levelsToSearch) {
+            const layers = this.getEntityLayers(level);
+            for (let layer of layers) {
+                results = results.concat(layer.getLdtkEntitiesByField(fieldIdentifier, value));
+            }
+        }
+        return results;
+    }
+    /**
+     * Search levels for excalibur entities that match an identifier (case insensitive)
+     * @param identifier
+     * @param levels
+     */
+    getEntitiesByIdentifier(identifier, levels) {
+        let results = [];
+        const levelsToSearch = levels !== null && levels !== void 0 ? levels : Array.from(this.levels.values()).map(l => l.ldtkLevel.identifier);
+        for (const level of levelsToSearch) {
+            const layers = this.getEntityLayers(level);
+            for (let layer of layers) {
+                results = results.concat(layer.getEntitiesByIdentifier(identifier));
+            }
+        }
+        return results;
+    }
+    /**
+     * Search levels for excalibur entities that match a field and optionally a value (both case insensitive)
+     * @param fieldIdentifier
+     * @param value
+     * @param levels
+     */
+    getEntitiesByField(fieldIdentifier, value, levels) {
+        let results = [];
+        const levelsToSearch = levels !== null && levels !== void 0 ? levels : Array.from(this.levels.values()).map(l => l.ldtkLevel.identifier);
+        for (const level of levelsToSearch) {
+            const layers = this.getEntityLayers(level);
+            for (let layer of layers) {
+                results = results.concat(layer.getEntitiesByField(fieldIdentifier, value));
+            }
+        }
+        return results;
+    }
+    /**
+     * Get the level bounds given a list of level identifiers (case insensitive)
+     * @param levels
+     */
+    getLevelBounds(levels) {
+        levels = levels !== null && levels !== void 0 ? levels : Array.from(this.levelsByName.keys());
+        let bounds = null;
+        for (const level of this.levels.values()) {
+            if (!levels.includes(level.ldtkLevel.identifier)) {
+                continue;
+            }
+            const firstTileLayer = this.getTileLayers(level.ldtkLevel.identifier)[0];
+            if (firstTileLayer) {
+                const tileBounds = excalibur__WEBPACK_IMPORTED_MODULE_6__.BoundingBox.fromDimension(firstTileLayer.tilemap.tileWidth * firstTileLayer.tilemap.columns, firstTileLayer.tilemap.tileHeight * firstTileLayer.tilemap.rows, excalibur__WEBPACK_IMPORTED_MODULE_6__.Vector.Zero, firstTileLayer.tilemap.pos);
+                if (!bounds) {
+                    bounds = tileBounds;
+                }
+                else {
+                    bounds = bounds.combine(tileBounds);
+                }
+            }
+        }
+        return bounds !== null && bounds !== void 0 ? bounds : new excalibur__WEBPACK_IMPORTED_MODULE_6__.BoundingBox();
+    }
+    addToScene(scene, options) {
+        var _a, _b;
+        const { pos, useLevelOffsets } = { pos: (0,excalibur__WEBPACK_IMPORTED_MODULE_6__.vec)(0, 0), useLevelOffsets: true, ...options };
+        for (let [id, level] of this.levels.entries()) {
+            if ((_a = options === null || options === void 0 ? void 0 : options.levelFilter) === null || _a === void 0 ? void 0 : _a.length) {
+                if (!options.levelFilter.includes(level.ldtkLevel.identifier)) {
+                    continue;
+                }
+            }
+            for (let layer of level.layers) {
+                if (layer instanceof _tile_layer__WEBPACK_IMPORTED_MODULE_0__.TileLayer || layer instanceof _intgrid_layer__WEBPACK_IMPORTED_MODULE_11__.IntGridLayer) {
+                    layer.tilemap.pos = layer.tilemap.pos.add(pos);
+                    if (!useLevelOffsets) {
+                        layer.tilemap.pos = layer.tilemap.pos.sub(layer.worldPos);
+                    }
+                    scene.add(layer.tilemap);
+                }
+                else {
+                    layer.runFactories();
+                    for (let entity of layer.entities) {
+                        const tx = entity.get(excalibur__WEBPACK_IMPORTED_MODULE_6__.TransformComponent);
+                        if (tx) {
+                            tx.pos = tx.pos.add(pos);
+                            if (!useLevelOffsets) {
+                                tx.pos = tx.pos.sub(layer.worldPos);
+                            }
+                        }
+                        scene.add(entity);
+                    }
+                }
+            }
+        }
+        if (this.useExcaliburWiring) {
+            const camera = this.getLdtkEntitiesByField('camera', true)[0];
+            if (camera) {
+                scene.camera.pos = (0,excalibur__WEBPACK_IMPORTED_MODULE_6__.vec)(camera.px[0], camera.px[0]);
+                const zoom = camera.fieldInstances.find(f => f.__identifier.toLocaleLowerCase() === 'zoom');
+                if (zoom) {
+                    scene.camera.zoom = +zoom.__value;
+                }
+            }
+        }
+        if (this.useTilemapCameraStrategy) {
+            let bounds = this.getLevelBounds(options === null || options === void 0 ? void 0 : options.levelFilter);
+            scene.camera.strategy.limitCameraBounds(bounds);
+        }
+        if (this.useMapBackgroundColor) {
+            for (let [id, level] of this.levels.entries()) {
+                if ((_b = options === null || options === void 0 ? void 0 : options.levelFilter) === null || _b === void 0 ? void 0 : _b.length) {
+                    if (!options.levelFilter.includes(level.ldtkLevel.identifier)) {
+                        continue;
+                    }
+                }
+                scene.backgroundColor = level.backgroundColor;
+                break;
+            }
+        }
+    }
+}
+LdtkResource.supportedLdtkVersion = "1.5.3";
+
+
+/***/ }),
+
+/***/ "./src/level-resource.ts":
+/*!*******************************!*\
+  !*** ./src/level-resource.ts ***!
+  \*******************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   LevelResource: () => (/* binding */ LevelResource)
+/* harmony export */ });
+/* harmony import */ var excalibur__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! excalibur */ "./node_modules/excalibur/build/esm/excalibur.development.js");
+/* harmony import */ var _loader_cache__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./loader-cache */ "./src/loader-cache.ts");
+/* harmony import */ var _file_loader__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./file-loader */ "./src/file-loader.ts");
+/* harmony import */ var _level__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./level */ "./src/level.ts");
+/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./types */ "./src/types.ts");
+
+
+
+
+
+/**
+ * Loads LDtk levels that are stored in separate files
+ */
+class LevelResource {
+    constructor(path, resource, options) {
+        this.path = path;
+        this.resource = resource;
+        this.fileLoader = _file_loader__WEBPACK_IMPORTED_MODULE_2__.FetchLoader;
+        this.strict = true;
+        this.headless = false;
+        const { headless, strict, fileLoader, imageLoader, pathMap } = { ...options };
+        this.fileLoader = fileLoader !== null && fileLoader !== void 0 ? fileLoader : this.fileLoader;
+        this.strict = strict !== null && strict !== void 0 ? strict : this.strict;
+        this.headless = headless !== null && headless !== void 0 ? headless : this.headless;
+        this.imageLoader = imageLoader !== null && imageLoader !== void 0 ? imageLoader : new _loader_cache__WEBPACK_IMPORTED_MODULE_1__.LoaderCache(excalibur__WEBPACK_IMPORTED_MODULE_0__.ImageSource);
+        this.pathMap = pathMap !== null && pathMap !== void 0 ? pathMap : this.pathMap;
+    }
+    async load() {
+        const data = await this.fileLoader(this.path, 'json');
+        let level;
+        if (this.strict) {
+            try {
+                level = _types__WEBPACK_IMPORTED_MODULE_4__.LdtkLevel.parse(data);
+            }
+            catch (e) {
+                console.error(`Could not parse LDtk level data at ${this.path} are you sure a level is there and not corrupt?`);
+                throw e;
+            }
+        }
+        else {
+            level = data;
+        }
+        return this.data = new _level__WEBPACK_IMPORTED_MODULE_3__.Level(level, this.resource);
+    }
+    isLoaded() {
+        return !!this.data;
+    }
+}
+
+
+/***/ }),
+
+/***/ "./src/level.ts":
+/*!**********************!*\
+  !*** ./src/level.ts ***!
+  \**********************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   Level: () => (/* binding */ Level)
+/* harmony export */ });
+/* harmony import */ var excalibur__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! excalibur */ "./node_modules/excalibur/build/esm/excalibur.development.js");
+/* harmony import */ var _entity_layer__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./entity-layer */ "./src/entity-layer.ts");
+/* harmony import */ var _intgrid_layer__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./intgrid-layer */ "./src/intgrid-layer.ts");
+/* harmony import */ var _tile_layer__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./tile-layer */ "./src/tile-layer.ts");
+
+
+
+
+class Level {
+    constructor(ldtkLevel, resource) {
+        var _a, _b, _c, _d;
+        this.ldtkLevel = ldtkLevel;
+        this.resource = resource;
+        this.layers = [];
+        if (ldtkLevel.__bgColor) {
+            this.backgroundColor = excalibur__WEBPACK_IMPORTED_MODULE_0__.Color.fromHex(ldtkLevel.__bgColor);
+        }
+        if (ldtkLevel.layerInstances) {
+            let order = resource.startZIndex;
+            let layers = ldtkLevel.layerInstances.slice().reverse();
+            for (let layer of layers) {
+                if (((_a = layer.entityInstances) === null || _a === void 0 ? void 0 : _a.length) !== 0) {
+                    this.layers.push(new _entity_layer__WEBPACK_IMPORTED_MODULE_1__.EntityLayer(this, layer, resource, order));
+                }
+                if (((_b = layer.gridTiles) === null || _b === void 0 ? void 0 : _b.length) !== 0) {
+                    this.layers.push(new _tile_layer__WEBPACK_IMPORTED_MODULE_3__.TileLayer(this, layer, resource, order));
+                }
+                // Includes standard IntGrid, IntGrid w/ AutoTile & AutoTile layers
+                if (((_c = layer.intGridCsv) === null || _c === void 0 ? void 0 : _c.length) !== 0 || ((_d = layer.autoLayerTiles) === null || _d === void 0 ? void 0 : _d.length) !== 0) {
+                    this.layers.push(new _intgrid_layer__WEBPACK_IMPORTED_MODULE_2__.IntGridLayer(this, layer, resource, order));
+                }
+                order++;
+            }
+        }
+    }
+}
+
+
+/***/ }),
+
+/***/ "./src/loader-cache.ts":
+/*!*****************************!*\
+  !*** ./src/loader-cache.ts ***!
+  \*****************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   LoaderCache: () => (/* binding */ LoaderCache)
+/* harmony export */ });
+/**
+ * Read through cache for loadables
+ */
+class LoaderCache {
+    constructor(type) {
+        this.type = type;
+        this._loaded = false;
+        this.cache = new Map();
+    }
+    getOrAdd(...args) {
+        let resource = this.cache.get(args.join('+'));
+        if (resource) {
+            return resource;
+        }
+        resource = new this.type(...args);
+        this.cache.set(args.join('+'), resource);
+        return resource;
+    }
+    values() {
+        if (this._loaded) {
+            return Array.from(this.cache.values());
+        }
+        throw new Error(`Read through cache not yet loaded! No values to return!`);
+    }
+    async load() {
+        const resources = Array.from(this.cache.entries());
+        const results = await Promise.allSettled(resources.map(i => i[1].load()));
+        // Check for errors loading resources
+        let errored = 0;
+        for (let i = 0; i < results.length; i++) {
+            const result = results[i];
+            if (result.status === 'rejected') {
+                console.error(`Error loading resource at ${resources[i][0]}, is your pathMap correct? or your LDtk map corrupted?`, result.reason);
+                errored++;
+            }
+        }
+        if (errored) {
+            throw new Error(`Error loading ${errored} resources`);
+        }
+        this._loaded = true;
+    }
+}
+
+
+/***/ }),
+
+/***/ "./src/path-util.ts":
+/*!**************************!*\
+  !*** ./src/path-util.ts ***!
+  \**************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   filenameFromPath: () => (/* binding */ filenameFromPath),
+/* harmony export */   mapPath: () => (/* binding */ mapPath),
+/* harmony export */   pathInMap: () => (/* binding */ pathInMap),
+/* harmony export */   pathRelativeToBase: () => (/* binding */ pathRelativeToBase)
+/* harmony export */ });
+function filenameFromPath(inputPath) {
+    const filenameExpression = /[^/\\&\?]+\.\w{2,4}(?=([\#\?&].*$|$))/ig;
+    const matches = inputPath.match(filenameExpression);
+    if (matches) {
+        const match = matches[0];
+        return match;
+    }
+    throw new Error(`Could not locate filename from path: ${inputPath}`);
+}
+function mapPath(inputPath, pathMap) {
+    for (const { path, output } of pathMap) {
+        if (typeof path === 'string') {
+            if (inputPath.includes(path)) {
+                return output;
+            }
+        }
+        else {
+            const match = inputPath.match(path);
+            if (match) {
+                return output.replace('[match]', match[0]);
+                // removed by dead control flow
+{}
+            }
+        }
+    }
+    return inputPath;
+}
+function pathInMap(inputPath, pathMap) {
+    if (!pathMap)
+        return false;
+    for (const { path, output } of pathMap) {
+        if (typeof path === 'string') {
+            if (inputPath.includes(path)) {
+                return true;
+            }
+        }
+        else {
+            const match = inputPath.match(path);
+            if (match) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+function pathRelativeToBase(basePath, relativeToBase, pathMap) {
+    if (pathInMap(relativeToBase, pathMap) && pathMap) {
+        return mapPath(relativeToBase, pathMap);
+    }
+    // Use absolute path if specified
+    if (relativeToBase.indexOf('/') === 0) {
+        return relativeToBase;
+    }
+    const originSplit = basePath.split('/');
+    const relativeSplit = relativeToBase.split('/');
+    // if origin path is a file, remove it so it's a directory
+    if (originSplit[originSplit.length - 1].includes('.')) {
+        originSplit.pop();
+    }
+    return originSplit.concat(relativeSplit).join('/');
+}
+
+
+/***/ }),
+
+/***/ "./src/tile-layer.ts":
+/*!***************************!*\
+  !*** ./src/tile-layer.ts ***!
+  \***************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   TileLayer: () => (/* binding */ TileLayer)
+/* harmony export */ });
+/* harmony import */ var excalibur__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! excalibur */ "./node_modules/excalibur/build/esm/excalibur.development.js");
+
+class TileLayer {
+    constructor(level, ldtkLayer, resource, order) {
+        var _a, _b, _c, _d;
+        this.order = order;
+        this.worldPos = (0,excalibur__WEBPACK_IMPORTED_MODULE_0__.vec)(level.ldtkLevel.worldX, level.ldtkLevel.worldY);
+        this.offset = (0,excalibur__WEBPACK_IMPORTED_MODULE_0__.vec)(ldtkLayer.__pxTotalOffsetX, ldtkLayer.__pxTotalOffsetY);
+        this.ldtkLayer = ldtkLayer;
+        this.tilemap = new excalibur__WEBPACK_IMPORTED_MODULE_0__.TileMap({
+            name: ldtkLayer.__identifier,
+            pos: this.worldPos.add(this.offset),
+            tileWidth: ldtkLayer.__gridSize,
+            tileHeight: ldtkLayer.__gridSize,
+            rows: ldtkLayer.__cHei,
+            columns: ldtkLayer.__cWid,
+        });
+        this.tilemap.z = order;
+        const graphics = this.tilemap.get(excalibur__WEBPACK_IMPORTED_MODULE_0__.GraphicsComponent);
+        graphics.isVisible = ldtkLayer.visible;
+        if (ldtkLayer.__tilesetDefUid) {
+            this.tileset = resource.tilesets.get(ldtkLayer.__tilesetDefUid);
+            for (let tile of ldtkLayer.gridTiles) {
+                const xCoord = Math.floor(tile.px[0] / ldtkLayer.__gridSize);
+                const yCoord = Math.floor(tile.px[1] / ldtkLayer.__gridSize);
+                const exTile = this.tilemap.getTile(xCoord, yCoord);
+                if (this.tileset) {
+                    const tsxCoord = Math.floor((tile.src[0] - ((_a = this.tileset.ldtkTileset.padding) !== null && _a !== void 0 ? _a : 0)) / (this.tileset.ldtkTileset.tileGridSize + ((_b = this.tileset.ldtkTileset.spacing) !== null && _b !== void 0 ? _b : 0)));
+                    const tsyCoord = Math.floor((tile.src[1] - ((_c = this.tileset.ldtkTileset.padding) !== null && _c !== void 0 ? _c : 0)) / (this.tileset.ldtkTileset.tileGridSize + ((_d = this.tileset.ldtkTileset.spacing) !== null && _d !== void 0 ? _d : 0)));
+                    // Bit 0 toggles x flip
+                    // Bit 1 toggles 1 flip
+                    // Examples: f=0 (no flip), f=1 (X flip only), f=2 (Y flip only), f=3 (both flips)
+                    const flipHorizontal = !!(tile.f & 0b01);
+                    const flipVertical = !!(tile.f & 0b10);
+                    let sprite = this.tileset.spritesheet.getSprite(tsxCoord, tsyCoord);
+                    if (flipHorizontal || flipVertical) {
+                        sprite = sprite.clone();
+                        sprite.flipHorizontal = flipHorizontal;
+                        sprite.flipVertical = flipVertical;
+                    }
+                    if (sprite) {
+                        exTile.addGraphic(sprite);
+                    }
+                    else {
+                        console.error('Could not find sprite in LDtk spritesheet at', tsxCoord, tsyCoord);
+                    }
+                }
+            }
+        }
+        else {
+            console.error('Could not tileset in LDtk', ldtkLayer.__tilesetDefUid, ldtkLayer.__tilesetRelPath);
+        }
+    }
+}
+
+
+/***/ }),
+
+/***/ "./src/tileset.ts":
+/*!************************!*\
+  !*** ./src/tileset.ts ***!
+  \************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   Tileset: () => (/* binding */ Tileset)
+/* harmony export */ });
+/* harmony import */ var excalibur__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! excalibur */ "./node_modules/excalibur/build/esm/excalibur.development.js");
+
+class Tileset {
+    constructor(options) {
+        var _a, _b, _c, _d;
+        const { image, ldtkTileset } = options;
+        this.image = image;
+        this.ldtkTileset = ldtkTileset;
+        this.spritesheet = excalibur__WEBPACK_IMPORTED_MODULE_0__.SpriteSheet.fromImageSource({
+            image,
+            grid: {
+                rows: ldtkTileset.pxHei / ldtkTileset.tileGridSize,
+                columns: ldtkTileset.pxWid / ldtkTileset.tileGridSize,
+                spriteHeight: ldtkTileset.tileGridSize,
+                spriteWidth: ldtkTileset.tileGridSize
+            },
+            spacing: {
+                margin: {
+                    x: (_a = ldtkTileset.spacing) !== null && _a !== void 0 ? _a : 0,
+                    y: (_b = ldtkTileset.spacing) !== null && _b !== void 0 ? _b : 0,
+                },
+                originOffset: {
+                    x: (_c = ldtkTileset.padding) !== null && _c !== void 0 ? _c : 0,
+                    y: (_d = ldtkTileset.padding) !== null && _d !== void 0 ? _d : 0
+                }
+            }
+        });
+    }
+}
+
+
+/***/ }),
+
+/***/ "./src/types.ts":
+/*!**********************!*\
+  !*** ./src/types.ts ***!
+  \**********************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   LdtkEntityDefinition: () => (/* binding */ LdtkEntityDefinition),
+/* harmony export */   LdtkEntityInstance: () => (/* binding */ LdtkEntityInstance),
+/* harmony export */   LdtkLayerDefinition: () => (/* binding */ LdtkLayerDefinition),
+/* harmony export */   LdtkLayerInstance: () => (/* binding */ LdtkLayerInstance),
+/* harmony export */   LdtkLevel: () => (/* binding */ LdtkLevel),
+/* harmony export */   LdtkProjectMetadata: () => (/* binding */ LdtkProjectMetadata)
+/* harmony export */ });
+/* harmony import */ var zod__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! zod */ "./node_modules/zod/lib/index.mjs");
+
+const LdtkTilesetRectangle = zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
+    h: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    tilesetUid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    w: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    x: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    y: zod__WEBPACK_IMPORTED_MODULE_0__.z.number()
+});
+const LdtkPixel = zod__WEBPACK_IMPORTED_MODULE_0__.z.tuple([zod__WEBPACK_IMPORTED_MODULE_0__.z.number(), zod__WEBPACK_IMPORTED_MODULE_0__.z.number()]);
+const LdtkFieldInstance = zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
+    __identifier: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
+    __tile: LdtkTilesetRectangle.nullable(),
+    __type: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(), //z.union([z.literal('Int'), z.literal('Float'), z.literal('String'), z.literal('Bool'), z.literal('Enum')]), // TODO this might not work with ENUM
+    __value: zod__WEBPACK_IMPORTED_MODULE_0__.z.any(),
+    defUid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number()
+});
+const LdtkTileInstance = zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
+    a: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    f: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(), // 2-bit int 0bXY flip
+    px: LdtkPixel,
+    src: LdtkPixel,
+    t: zod__WEBPACK_IMPORTED_MODULE_0__.z.number()
+});
+const LdtkEntityInstance = zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
+    __grid: LdtkPixel,
+    __identifier: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
+    __pivot: LdtkPixel,
+    __smartColor: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
+    __tags: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(zod__WEBPACK_IMPORTED_MODULE_0__.z.string()),
+    __tile: LdtkTilesetRectangle.nullable(),
+    __worldX: zod__WEBPACK_IMPORTED_MODULE_0__.z.number().nullable(),
+    __worldY: zod__WEBPACK_IMPORTED_MODULE_0__.z.number().nullable(),
+    defUid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    fieldInstances: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(LdtkFieldInstance),
+    height: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    iid: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
+    px: LdtkPixel,
+    width: zod__WEBPACK_IMPORTED_MODULE_0__.z.number()
+});
+const LdtkLayerInstance = zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
+    __cHei: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    __cWid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    __gridSize: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    __identifier: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
+    __opacity: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    __pxTotalOffsetX: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    __pxTotalOffsetY: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    __tilesetDefUid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number().nullable(),
+    __tilesetRelPath: zod__WEBPACK_IMPORTED_MODULE_0__.z.string().nullable(),
+    __type: zod__WEBPACK_IMPORTED_MODULE_0__.z.union([zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('IntGrid'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('Entities'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('Tiles'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('AutoLayer')]),
+    autoLayerTiles: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(LdtkTileInstance), // only in auto layers
+    entityInstances: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(LdtkEntityInstance), // only in entity layers
+    gridTiles: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(LdtkTileInstance),
+    iid: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
+    intGridCsv: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(zod__WEBPACK_IMPORTED_MODULE_0__.z.number()), // __cWid x __cHei, 0 means empty, values start at 1
+    layerDefUid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    levelId: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    overrideTilesetUid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number().nullable(),
+    pxOffsetX: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    pxOffsetY: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    visible: zod__WEBPACK_IMPORTED_MODULE_0__.z.boolean()
+});
+const LdtkLevel = zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
+    __bgColor: zod__WEBPACK_IMPORTED_MODULE_0__.z.string().nullable(),
+    bgColor: zod__WEBPACK_IMPORTED_MODULE_0__.z.string().nullable(),
+    __bgPos: zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
+        cropRect: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(zod__WEBPACK_IMPORTED_MODULE_0__.z.tuple([zod__WEBPACK_IMPORTED_MODULE_0__.z.number(), zod__WEBPACK_IMPORTED_MODULE_0__.z.number(), zod__WEBPACK_IMPORTED_MODULE_0__.z.number(), zod__WEBPACK_IMPORTED_MODULE_0__.z.number()])), // cropX, cropY, cropWidth, cropHeight
+        scale: zod__WEBPACK_IMPORTED_MODULE_0__.z.tuple([zod__WEBPACK_IMPORTED_MODULE_0__.z.number(), zod__WEBPACK_IMPORTED_MODULE_0__.z.number()]),
+        topLeftPx: LdtkPixel
+    }).nullable(),
+    __neighbours: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
+        dir: zod__WEBPACK_IMPORTED_MODULE_0__.z.union([zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('n'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('s'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('w'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('e'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('ne'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('nw'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('se'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('sw'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('o'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('<'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('>')]),
+        levelIid: zod__WEBPACK_IMPORTED_MODULE_0__.z.string()
+    })),
+    bgRelPath: zod__WEBPACK_IMPORTED_MODULE_0__.z.string().nullable(),
+    externalRelPath: zod__WEBPACK_IMPORTED_MODULE_0__.z.string().nullable(),
+    fieldInstances: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(LdtkFieldInstance),
+    identifier: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
+    iid: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
+    layerInstances: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(LdtkLayerInstance).nullable(), // null if the save levels separately is enabled
+    pxHei: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    pxWid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    uid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    worldDepth: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    worldX: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    worldY: zod__WEBPACK_IMPORTED_MODULE_0__.z.number()
+});
+const LdtkWorld = zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
+    identifier: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
+    iid: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
+    levels: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(LdtkLevel),
+    worldGridHeight: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    worldGridWidth: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    // TODO is this a typo Vania?
+    worldLayout: zod__WEBPACK_IMPORTED_MODULE_0__.z.union([zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('Free'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('GridVania'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('LinearHorizontal'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('LinearVertical')]),
+});
+const LdtkEnumValueDefinition = zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
+    color: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    id: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
+    tileRect: LdtkTilesetRectangle.nullable()
+});
+const LdtkEnumDefinition = zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
+    externalRelPath: zod__WEBPACK_IMPORTED_MODULE_0__.z.string().nullable(),
+    iconTilesetUid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number().nullable(),
+    identifier: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
+    tags: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(zod__WEBPACK_IMPORTED_MODULE_0__.z.string()),
+    uid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    values: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(LdtkEnumValueDefinition)
+});
+const LdtkTilesetDefinition = zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
+    __cHei: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    __cWid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    customData: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
+        data: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
+        tileId: zod__WEBPACK_IMPORTED_MODULE_0__.z.number()
+    })),
+    embedAtlas: zod__WEBPACK_IMPORTED_MODULE_0__.z.string().nullable(),
+    enumTags: zod__WEBPACK_IMPORTED_MODULE_0__.z.optional(zod__WEBPACK_IMPORTED_MODULE_0__.z.array(zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
+        enumValueId: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
+        tileIds: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(zod__WEBPACK_IMPORTED_MODULE_0__.z.number())
+    }))),
+    identifier: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
+    padding: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    pxHei: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    pxWid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    relPath: zod__WEBPACK_IMPORTED_MODULE_0__.z.string().nullable(),
+    spacing: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    tags: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(zod__WEBPACK_IMPORTED_MODULE_0__.z.string()),
+    tagsSourceEnumUid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number().nullable(),
+    tileGridSize: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    uid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number()
+});
+const LdtkLayerDefinition = zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
+    __type: zod__WEBPACK_IMPORTED_MODULE_0__.z.union([zod__WEBPACK_IMPORTED_MODULE_0__.z.literal("IntGrid"), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal("Entities"), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal("Tiles"), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal("AutoLayer")]),
+    autoSourceLayerDefUid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number().nullable(),
+    displayOpacity: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    gridSize: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    identifier: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
+    intGridValues: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
+        color: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
+        groupUid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+        identifier: zod__WEBPACK_IMPORTED_MODULE_0__.z.string().nullable(),
+        tile: LdtkTilesetRectangle.nullable(),
+        value: zod__WEBPACK_IMPORTED_MODULE_0__.z.number()
+    })),
+    intGridValuesGroups: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
+        color: zod__WEBPACK_IMPORTED_MODULE_0__.z.string().nullable(),
+        identifier: zod__WEBPACK_IMPORTED_MODULE_0__.z.string().nullable(),
+        uid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number()
+    })),
+    parallaxFactorX: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    parallaxFactorY: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    parallaxScaling: zod__WEBPACK_IMPORTED_MODULE_0__.z.boolean(),
+    pxOffsetX: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    pxOffsetY: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    tilesetDefUid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number().nullable(),
+    uid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+});
+const LdtkEntityDefinition = zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
+    color: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
+    height: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    identifier: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
+    nineSliceBorders: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(zod__WEBPACK_IMPORTED_MODULE_0__.z.number()),
+    pivotX: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    pivotY: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    tileRect: LdtkTilesetRectangle.nullable(),
+    tileRenderMode: zod__WEBPACK_IMPORTED_MODULE_0__.z.union([
+        zod__WEBPACK_IMPORTED_MODULE_0__.z.literal("Cover"),
+        zod__WEBPACK_IMPORTED_MODULE_0__.z.literal("FitInside"),
+        zod__WEBPACK_IMPORTED_MODULE_0__.z.literal("Repeat"),
+        zod__WEBPACK_IMPORTED_MODULE_0__.z.literal("Stretch"),
+        zod__WEBPACK_IMPORTED_MODULE_0__.z.literal("FullSizeCropped"),
+        zod__WEBPACK_IMPORTED_MODULE_0__.z.literal("FullSizeUncropped"),
+        zod__WEBPACK_IMPORTED_MODULE_0__.z.literal("NineSlice")
+    ]),
+    tilesetId: zod__WEBPACK_IMPORTED_MODULE_0__.z.number().nullable(),
+    uiTileRect: LdtkTilesetRectangle.nullable(),
+    uid: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+    width: zod__WEBPACK_IMPORTED_MODULE_0__.z.number()
+});
+const LdtkDefinitions = zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
+    tilesets: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(LdtkTilesetDefinition),
+    enums: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(LdtkEnumDefinition),
+    layers: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(LdtkLayerDefinition),
+    entities: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(LdtkEntityDefinition)
+});
+const LdtkProjectMetadata = zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
+    iid: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
+    bgColor: zod__WEBPACK_IMPORTED_MODULE_0__.z.string().nullable(),
+    defs: LdtkDefinitions,
+    externalLevels: zod__WEBPACK_IMPORTED_MODULE_0__.z.boolean(),
+    jsonVersion: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
+    levels: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(LdtkLevel),
+    toc: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
+        identifier: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
+        instancesData: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(zod__WEBPACK_IMPORTED_MODULE_0__.z.object({
+            fields: zod__WEBPACK_IMPORTED_MODULE_0__.z.any(),
+            heiPx: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+            iids: zod__WEBPACK_IMPORTED_MODULE_0__.z.string(),
+            widPix: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+            worldX: zod__WEBPACK_IMPORTED_MODULE_0__.z.number(),
+            worldY: zod__WEBPACK_IMPORTED_MODULE_0__.z.number()
+        }))
+    })),
+    // Moving to worlds array
+    worldGridHeight: zod__WEBPACK_IMPORTED_MODULE_0__.z.number().nullable(),
+    worldGridWidth: zod__WEBPACK_IMPORTED_MODULE_0__.z.number().nullable(),
+    // TODO is this a LDtk docs typo Vania?
+    worldLayout: zod__WEBPACK_IMPORTED_MODULE_0__.z.union([zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('Free'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('GridVania'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('LinearHorizontal'), zod__WEBPACK_IMPORTED_MODULE_0__.z.literal('LinearVertical')]).nullable(),
+    worlds: zod__WEBPACK_IMPORTED_MODULE_0__.z.array(LdtkWorld)
+});
+
+
 /***/ })
 
 /******/ 	});
@@ -48306,12 +48313,12 @@ var __webpack_exports__ = {};
   !*** ./sample/autotile.ts ***!
   \****************************/
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var excalibur__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! excalibur */ "./node_modules/excalibur/build/esm/excalibur.development.js");
-/* harmony import */ var _resources__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./resources */ "./sample/resources.ts");
+/* harmony import */ var excalibur__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! excalibur */ "./node_modules/excalibur/build/esm/excalibur.development.js");
+/* harmony import */ var _resources__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./resources */ "./sample/resources.ts");
 
 
-excalibur__WEBPACK_IMPORTED_MODULE_1__.Flags.useLegacyImageRenderer();
-const game = new excalibur__WEBPACK_IMPORTED_MODULE_1__.Engine({
+excalibur__WEBPACK_IMPORTED_MODULE_0__.Flags.useLegacyImageRenderer();
+const game = new excalibur__WEBPACK_IMPORTED_MODULE_0__.Engine({
     resolution: {
         width: 256,
         height: 256,
@@ -48319,12 +48326,12 @@ const game = new excalibur__WEBPACK_IMPORTED_MODULE_1__.Engine({
     suppressPlayButton: false,
     pixelArt: true,
     pixelRatio: 4,
-    displayMode: excalibur__WEBPACK_IMPORTED_MODULE_1__.DisplayMode.FitScreen,
+    displayMode: excalibur__WEBPACK_IMPORTED_MODULE_0__.DisplayMode.FitScreen,
 });
-game.start(_resources__WEBPACK_IMPORTED_MODULE_0__.loader).then(() => {
+game.start(_resources__WEBPACK_IMPORTED_MODULE_1__.loader).then(() => {
     console.log('Game start!');
-    _resources__WEBPACK_IMPORTED_MODULE_0__.Resources.LdtkAutoTile.addToScene(game.currentScene, {
-        pos: excalibur__WEBPACK_IMPORTED_MODULE_1__.vec(0, 0)
+    _resources__WEBPACK_IMPORTED_MODULE_1__.Resources.LdtkAutoTile.addToScene(game.currentScene, {
+        pos: excalibur__WEBPACK_IMPORTED_MODULE_0__.vec(0, 0)
     });
 });
 

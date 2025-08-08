@@ -4,6 +4,9 @@ module.exports = {
   devtool: 'source-map',
   devServer: {
     static: '.',
+    headers: {
+      'Cache-Control': 'no-store',
+    },
   },
   module: {
     rules: [
