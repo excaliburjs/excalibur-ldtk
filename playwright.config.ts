@@ -18,10 +18,9 @@ export default defineConfig({
     timeout: 240 * 1000, // linux takes a long time
     url: 'http://localhost:8080/',
     reuseExistingServer: !process.env.CI,
-    stdout: 'ignore',
+    stdout: 'pipe',
     stderr: 'pipe',
    },
-  timeout: 2 * 60_000,
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
