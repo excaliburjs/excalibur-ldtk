@@ -4,6 +4,7 @@ module.exports = {
   devtool: 'source-map',
   devServer: {
     static: '.',
+    port: 8080
   },
   module: {
     rules: [
