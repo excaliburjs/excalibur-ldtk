@@ -21,6 +21,8 @@ export default defineConfig({
     stdout: 'pipe',
     stderr: 'pipe',
    },
+  // linux is REAL slow in gh actions runners
+  timeout: 4 * 60_000,
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
