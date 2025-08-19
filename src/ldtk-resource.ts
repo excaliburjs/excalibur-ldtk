@@ -454,7 +454,6 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
     addToScene(scene: Scene, options?: AddToSceneOptions) {
         const { pos, useLevelOffsets } = {pos: vec(0, 0), useLevelOffsets: true, ...options};
 
-        
         for (let [id, level] of this.levels.entries()) {
             if (options?.levelFilter?.length) {
                 if (!options.levelFilter.includes(level.ldtkLevel.identifier)) {
