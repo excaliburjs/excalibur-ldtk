@@ -33,7 +33,7 @@
   "author": "Erik Onarheim",
   "license": "BSD-2-Clause",
   "devDependencies": {
-    "@playwright/test": "1.54.2",
+    "@playwright/test": "1.56.1",
     "@types/node": "^22.10.2",
     "excalibur": "~0.31.0",
     "http-server": "14.1.1",
