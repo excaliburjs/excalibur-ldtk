@@ -487,7 +487,7 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
         if(this.useExcaliburWiring) {
             const camera = this.getLdtkEntitiesByField('camera', true)[0];
             if (camera) {
-                scene.camera.pos = vec(camera.px[0], camera.px[0]);
+                scene.camera.pos = vec(camera.px[0], camera.px[1]);
                 const zoom = camera.fieldInstances.find(f => f.__identifier.toLocaleLowerCase() === 'zoom');
                 if (zoom) {
                     scene.camera.zoom = +zoom.__value;
