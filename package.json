@@ -50,5 +50,17 @@
   "dependencies": {
     "compare-versions": "6.1.1",
     "zod": "3.24.1"
+  },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "onFail": "error",
+      "version": ">=24"
+    },
+    "packageManager": {
+      "name": "npm",
+      "onFail": "error",
+      "version": ">=11"
+    }
   }
 }
