@@ -16,3 +16,7 @@ tests/
 sample/
 **/webpack.config.js
 **/webpack.config.test.js
+build/esm/test
+build/esm/tests
+playwright.config.ts
+vite.config.ts

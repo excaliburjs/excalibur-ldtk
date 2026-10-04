@@ -21,7 +21,7 @@
     "types": "tsc --project tsconfig.json --declaration --emitDeclarationOnly",
     "type-check": "tsc --noEmit",
     "build:esm": "vite build && vite build --minify false",
-    "build": "npm run build:esm",
+    "build": "npm run build:esm && npm run types",
     "test:e2e": "playwright test",
     "test:e2e:update": "playwright test --update-snapshots",
     "test": "npm run test:e2e"
