@@ -31,7 +31,7 @@
   "devDependencies": {
     "@playwright/test": "1.63.0",
     "@types/node": "^22.10.2",
-    "excalibur": "0.33.0-alpha.224",
+    "excalibur": "0.33.0-alpha.247",
     "typescript": "7.0.2",
     "vite": "8.1.4",
     "vitest": "5.0.3"
