@@ -1,51 +1,43 @@
 {
   "name": "@excaliburjs/plugin-ldtk",
-  "version": "0.32.1",
+  "version": "1.0.0-alpha.0",
   "description": "Plugin to support LDtk generated tile maps in Excalibur",
   "repository": {
     "type": "git",
     "url": "https://github.com/excaliburjs/excalibur-ldtk"
   },
-  "main": "./build/umd/excalibur-ldtk.min.js",
-  "typings": "./build/umd/src/index.d.ts",
+  "main": "./build/esm/excalibur-ldtk.min.js",
+  "typings": "./build/esm/src/index.d.ts",
   "exports": {
     "./package.json": "./package.json",
     ".": {
-      "types": "./build/umd/src/index.d.ts",
-      "import": "./build/esm/excalibur-ldtk.min.js",
-      "require": "./build/umd/excalibur-ldtk.min.js"
+      "types": "./build/esm/src/index.d.ts",
+      "import": "./build/esm/excalibur-ldtk.min.js"
     }
   },
   "scripts": {
-    "start": "webpack-dev-server --config webpack.config.test.js --open",
-    "start:build": "webpack --config webpack.config.test.js",
-    "start:no-open": "webpack-dev-server --config webpack.config.test.js",
-    "start:ci-server": "http-server ./sample --port 8080",
-    "watch": "webpack --progress --watch",
-    "build:esm": "webpack --progress --config webpack.config.js --mode production --env output=esm",
-    "build:umd": "webpack --progress --config webpack.config.js --mode production",
-    "build": "npm run build:umd && npm run build:esm",
-    "test:unit": "karma start",
-    "test:integration": "npx playwright test",
-    "test:integration-update": "npx playwright test --update-snapshots",
-    "test": "npm run test:integration"
+    "start": "vite sample --port 4173 --strictPort --open",
+    "watch": "vite dev",
+    "types": "tsc --project tsconfig.json --declaration --emitDeclarationOnly",
+    "type-check": "tsc --noEmit",
+    "build:esm": "vite build && vite build --minify false",
+    "build": "npm run build:esm && npm run types",
+    "test:e2e": "playwright test",
+    "test:e2e:update": "playwright test --update-snapshots",
+    "test": "npm run test:e2e"
   },
   "author": "Erik Onarheim",
   "license": "BSD-2-Clause",
   "devDependencies": {
-    "@playwright/test": "1.55.1",
+    "@playwright/test": "1.63.0",
     "@types/node": "^22.10.2",
-    "excalibur": "~0.32.0",
-    "http-server": "14.1.1",
-    "raw-loader": "4.0.2",
-    "ts-loader": "9.5.1",
-    "typescript": "5.7.2",
-    "webpack": "5.104.1",
-    "webpack-cli": "6.0.1",
-    "webpack-dev-server": "6.0.0"
+    "excalibur": "0.33.0-alpha.224",
+    "typescript": "7.0.2",
+    "vite": "8.1.4",
+    "vitest": "5.0.3"
   },
   "peerDependencies": {
-    "excalibur": "~0.32.0"
+    "excalibur": ">=0.33.0-alpha.247"
   },
   "dependencies": {
     "compare-versions": "6.1.1",

@@ -27,6 +27,7 @@ export class IntGridLayer {
                 tileHeight: ldtkLayer.__gridSize,
                 rows,
                 columns,
+                compositeStrategy: 'together',
             });
             this.tilemap.z = order;
             const graphics = this.tilemap.get(GraphicsComponent);

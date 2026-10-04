@@ -1,84 +1,56 @@
 import { defineConfig, devices } from '@playwright/test';
 
-/**
- * Read environment variables from file.
- * https://github.com/motdotla/dotenv
- */
-// import dotenv from 'dotenv';
-// import path from 'path';
-// dotenv.config({ path: path.resolve(__dirname, '.env') });
+// Overridable so several plugin repos' suites can run side by side without silently
+// attaching to each other's already-running dev server (reuseExistingServer below).
+const port = Number(process.env.EX_E2E_PORT ?? 4173);
 
-/**
- * See https://playwright.dev/docs/test-configuration.
- */
 export default defineConfig({
-  testDir: './tests/',
-  webServer: {
-    command: 'npm run start:build && npm run start:ci-server',
-    timeout: 240 * 1000, // linux takes a long time
-    url: 'http://localhost:8080/',
-    reuseExistingServer: !process.env.CI,
-    stdout: 'pipe',
-    stderr: 'pipe',
-   },
-  // linux is REAL slow in gh actions runners
-  timeout: 4 * 60_000,
-  /* Run tests in files in parallel */
+  testDir: './test/e2e',
   fullyParallel: true,
-  /* Fail the build on CI if you accidentally left test.only in the source code. */
+  // Software (swiftshader) rendering makes these GPU-bound; 2 workers balances speed vs.
+  // stability - override with --workers if your machine has more headroom.
+  workers: 2,
+  timeout: 60_000,
   forbidOnly: !!process.env.CI,
-  /* Retry on CI only */
-  retries: process.env.CI ? 1 : 0,
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
-  /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'html',
-  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
+  retries: process.env.CI ? 2 : 0,
+  reporter: 'list',
   use: {
-    /* Base URL to use in actions like `await page.goto('/')`. */
-    // baseURL: 'http://127.0.0.1:3000',
-
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
+    baseURL: `http://localhost:${port}`,
+    screenshot: 'off',
+    trace: 'off'
   },
-
-  /* Configure projects for major browsers */
+  webServer: {
+    command: `npx vite sample --port ${port} --strictPort`,
+    port,
+    reuseExistingServer: !process.env.CI,
+    timeout: 60_000
+  },
   projects: [
     {
       name: 'chromium',
-      use: { 
+      use: {
         ...devices['Desktop Chrome'],
+        // Match Excalibur core's e2e/visual suite rendering args so screenshots are
+        // deterministic across machines/OSes.
         launchOptions: {
-          args: ["--no-sandbox", '--disable-web-security', "--use-gl=angle", "--use-angle=gl-egl"]
+          ignoreDefaultArgs: ['--disable-render-backgrounding', '--disable-remote-fonts', '--font-render-hinting'],
+          args: [
+            '--no-default-browser-check',
+            '--no-first-run',
+            '--disable-default-apps',
+            '--disable-popup-blocking',
+            '--disable-translate',
+            '--disable-background-timer-throttling',
+            '--disable-dev-shm-usage',
+            '--disable-renderer-backgrounding',
+            '--disable-device-discovery-notifications',
+            '--autoplay-policy=no-user-gesture-required',
+            '--mute-audio',
+            '--force-device-scale-factor=1',
+            '--use-gl=swiftshader'
+          ]
         }
-      },
-    },
-
-    /* Test against mobile viewports. */
-    // {
-    //   name: 'Mobile Chrome',
-    //   use: { ...devices['Pixel 5'] },
-    // },
-    // {
-    //   name: 'Mobile Safari',
-    //   use: { ...devices['iPhone 12'] },
-    // },
-
-    /* Test against branded browsers. */
-    // {
-    //   name: 'Microsoft Edge',
-    //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
-    // },
-    // {
-    //   name: 'Google Chrome',
-    //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
-    // },
-  ],
-
-  /* Run your local dev server before starting the tests */
-  // webServer: {
-  //   command: 'npm run start',
-  //   url: 'http://127.0.0.1:3000',
-  //   reuseExistingServer: !process.env.CI,
-  // },
+      }
+    }
+  ]
 });
