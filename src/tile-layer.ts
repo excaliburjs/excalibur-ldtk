@@ -23,6 +23,7 @@ export class TileLayer {
             tileHeight: ldtkLayer.__gridSize,
             rows: ldtkLayer.__cHei,
             columns: ldtkLayer.__cWid,
+            compositeStrategy: 'together',
         });
         this.tilemap.z = order;
         const graphics = this.tilemap.get(GraphicsComponent);
