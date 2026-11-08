@@ -3,7 +3,7 @@ import { Resources } from './resources';
 import { Config } from './config';
 
 export class Player extends ex.Actor {
-    constructor(args: ex.ActorArgs) {
+    constructor(args: ex.ActorOptions) {
         super({
             ...args,
             collisionType: ex.CollisionType.Active

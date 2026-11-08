@@ -47,7 +47,7 @@ export class LevelResource implements Loadable<Level> {
         }
         return this.data = new Level(level, this.resource);
     }
-    isLoaded(): boolean {
+    get isLoaded(): boolean {
         return !!this.data;
     }
 

@@ -257,7 +257,7 @@ export class LdtkResource implements Loadable<LdtkProjectMetadata> {
         return this.data = this.projectMetadata;
     };
 
-    isLoaded(): boolean {
+    get isLoaded(): boolean {
         return !!this.data;
     }
 

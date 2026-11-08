@@ -48,7 +48,7 @@ export class IntGridLayer {
                     const yCoord = Math.floor(i / columns);
                     const tile = this.tilemap.getTile(xCoord, yCoord);
                     if (solidValues.includes(ldtkLayer.intGridCsv[i])) {
-                        tile!.solid = true;
+                        tile!.isSolid = true;
                     }
                 }
 

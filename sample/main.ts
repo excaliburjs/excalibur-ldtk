@@ -2,7 +2,6 @@
 import * as ex from "excalibur";
 import { Player } from './player';
 import { Resources, loader } from "./resources";
-ex.Flags.useLegacyImageRenderer();
 const game = new ex.Engine({
     resolution: {
         width: 256,
