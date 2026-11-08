@@ -1,6 +1,6 @@
 {
   "name": "@excaliburjs/plugin-ldtk",
-  "version": "1.0.0-alpha.0",
+  "version": "1.0.0",
   "description": "Plugin to support LDtk generated tile maps in Excalibur",
   "repository": {
     "type": "git",
@@ -31,17 +31,17 @@
   "devDependencies": {
     "@playwright/test": "1.63.0",
     "@types/node": "^22.10.2",
-    "excalibur": "0.33.0-alpha.247",
+    "excalibur": "^1.0.0",
     "typescript": "7.0.2",
-    "vite": "8.1.4",
+    "vite": "8.1.6",
     "vitest": "5.0.3"
   },
   "peerDependencies": {
-    "excalibur": ">=0.33.0-alpha.247"
+    "excalibur": "^1.0.0"
   },
   "dependencies": {
     "compare-versions": "6.1.1",
-    "zod": "3.24.1"
+    "zod": "4.6.6"
   },
   "devEngines": {
     "runtime": {
